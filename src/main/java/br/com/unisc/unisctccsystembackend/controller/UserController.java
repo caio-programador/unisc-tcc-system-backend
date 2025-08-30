@@ -5,6 +5,7 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,8 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String name) {
-        List<UserResponseDTO> users = userService.getUsers(role, page, size, name);
+    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String name) {
+        Page<UserResponseDTO> users = userService.getUsers(role, page, size, name);
         return ResponseEntity.ok(users);
     }
 
