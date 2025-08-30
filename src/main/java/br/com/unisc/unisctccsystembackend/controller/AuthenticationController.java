@@ -8,6 +8,7 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
 import br.com.unisc.unisctccsystembackend.security.TokenService;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -51,13 +52,15 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public UserResponseDTO me(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> me(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        return new UserResponseDTO(
+        return ResponseEntity.ok(new UserResponseDTO(
+                user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
-       );
+       ));
     }
+
 }
