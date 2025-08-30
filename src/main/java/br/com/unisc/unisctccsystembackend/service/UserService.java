@@ -36,7 +36,7 @@ public class UserService {
             users = userRepository.findAll(pageable);
         }
         List<UserResponseDTO> formattedUsersList = users.stream().map(this::toDTO).toList();
-        return new PageImpl<UserResponseDTO>(formattedUsersList);
+        return new PageImpl<UserResponseDTO>(formattedUsersList, pageable, users.getTotalElements());
     }
 
     public UserResponseDTO getUserById(Long id) {
