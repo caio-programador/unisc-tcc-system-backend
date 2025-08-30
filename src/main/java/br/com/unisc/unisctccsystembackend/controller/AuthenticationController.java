@@ -8,7 +8,7 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
 import br.com.unisc.unisctccsystembackend.security.TokenService;
-import br.com.unisc.unisctccsystembackend.service.UserService;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +28,6 @@ public class AuthenticationController {
     private UserRepository repository;
     @Autowired
     private TokenService tokenService;
-
-    @Autowired
-    private UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
@@ -55,7 +52,7 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> me(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> me(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
         return ResponseEntity.ok(new UserResponseDTO(
@@ -64,17 +61,6 @@ public class AuthenticationController {
                 user.getEmail(),
                 user.getRole().name()
        ));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role){
-        List<UserResponseDTO> users = userService.getUsers(role);
-        return ResponseEntity.ok(users);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
     }
 
 }
