@@ -51,19 +51,14 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public UserResponseDTO me(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> me(org.springframework.security.core.Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        return new UserResponseDTO(
+        return ResponseEntity.ok(new UserResponseDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
-       );
-    }
-
-    @GetMapping("/users")
-    public List<User> users() {
-        return repository.findAll();
+       ));
     }
 }
