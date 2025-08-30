@@ -6,6 +6,7 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsUpdateDTO
 import br.com.unisc.unisctccsystembackend.service.TCCRelationshipsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class TCCRelationshipsController {
     private TCCRelationshipsService tccRelationshipsService;
 
     @GetMapping()
-    public ResponseEntity<List<TCCRelationshipsResponseDTO>> getAllTCCRelationships(
+    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(
             @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size

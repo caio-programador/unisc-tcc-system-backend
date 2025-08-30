@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,12 +30,13 @@ public class TCCRelationshipsService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size) {
+    public Page<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<TCCRelationships> tccs = repository.findByStudent_NameContainingIgnoreCase(name, pageable);
 
 
-        return tccs.stream().map(this::getTCCDTO).toList();
+        List<TCCRelationshipsResponseDTO> formattedTccList = tccs.stream().map(this::getTCCDTO).toList();
+        return new PageImpl<>(formattedTccList, pageable, tccs.getTotalElements());
     }
 
     public void save(TCCRelationshipsCreateDTO tcc) throws Exception {
