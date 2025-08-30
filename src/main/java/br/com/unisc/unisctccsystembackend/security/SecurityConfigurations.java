@@ -34,6 +34,9 @@ public class SecurityConfigurations {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("COORDENADOR")
+                        .requestMatchers(HttpMethod.GET, "/relationships").hasRole("PROFESSOR")
+                        .requestMatchers(HttpMethod.POST, "/relationships").hasRole("COORDENADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/relationships").hasRole("COORDENADOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
@@ -49,6 +52,7 @@ public class SecurityConfigurations {
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
+
 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();

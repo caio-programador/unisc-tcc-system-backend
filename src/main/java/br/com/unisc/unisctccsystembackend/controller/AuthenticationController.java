@@ -55,9 +55,15 @@ public class AuthenticationController {
         User user = (User) authentication.getPrincipal();
 
         return new UserResponseDTO(
+                user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
        );
+    }
+
+    @GetMapping("/users")
+    public List<User> users() {
+        return repository.findAll();
     }
 }
