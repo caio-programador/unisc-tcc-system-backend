@@ -27,6 +27,13 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @OneToOne(mappedBy = "student")
+    private TCCRelationships tccRelationships;
+
+    @OneToMany(mappedBy = "professor")
+    private List<TCCRelationships> tccs;
+
+
     public User(String name, String email, String password, UserRole role){
         this.name = name;
         this.email = email;

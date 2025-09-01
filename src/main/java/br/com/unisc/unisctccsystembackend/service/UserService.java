@@ -45,7 +45,7 @@ public class UserService {
         return toDTO(user);
     }
 
-    public void updateUserById(Long id, RegisterDTO registerDTO, User currentUser) throws Exception {
+    public User updateUserById(Long id, RegisterDTO registerDTO, User currentUser) throws Exception {
         if (!currentUser.getRole().equals(UserRole.COORDENADOR) && !currentUser.getId().equals(id)) {
             throw new BadRequestException("You do not have permission to update this user");
         }
@@ -66,7 +66,7 @@ public class UserService {
             user.setRole(registerDTO.role());
         }
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public void deleteUserById(Long id) {

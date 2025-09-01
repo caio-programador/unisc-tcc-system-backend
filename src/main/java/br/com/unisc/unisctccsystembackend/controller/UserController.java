@@ -1,8 +1,10 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
+import br.com.unisc.unisctccsystembackend.entities.DTO.LoginResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.RegisterDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
+import br.com.unisc.unisctccsystembackend.security.TokenService;
 import br.com.unisc.unisctccsystembackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,8 +21,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TokenService tokenService;
+
     @GetMapping
-    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String name) {
+    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size, @RequestParam(defaultValue = "") String name) {
         Page<UserResponseDTO> users = userService.getUsers(role, page, size, name);
         return ResponseEntity.ok(users);
     }
@@ -31,10 +36,11 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity updateUser(@PathVariable Long id, @RequestBody RegisterDTO registerDTO, Authentication authentication) throws Exception {
+    public ResponseEntity<LoginResponseDTO> updateUser(@PathVariable Long id, @RequestBody RegisterDTO registerDTO, Authentication authentication) throws Exception {
         User currentUser = (User) authentication.getPrincipal();
-        userService.updateUserById(id, registerDTO, currentUser);
-        return ResponseEntity.noContent().build();
+        User user = userService.updateUserById(id, registerDTO, currentUser);
+        var token = tokenService.generateToken(user);
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @DeleteMapping("/{id}")
