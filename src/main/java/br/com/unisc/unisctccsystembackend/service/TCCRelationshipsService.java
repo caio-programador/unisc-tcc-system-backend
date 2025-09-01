@@ -53,7 +53,17 @@ public class TCCRelationshipsService {
     }
 
     public TCCRelationshipsResponseDTO getOneTCCById(Long id) {
-        TCCRelationships tccRelationships =  repository.findById(id).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
+        TCCRelationships tccRelationships = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
+        return getTCCDTO(tccRelationships);
+    }
+
+    public TCCRelationshipsResponseDTO getOneTCCByStudentId(Long studentId) throws BadRequestException {
+        User student = userRepository.findById(studentId).orElseThrow(() -> new EntityNotFoundException("Student not found"));
+        if (student.getRole() != UserRole.ALUNO) {
+            throw new BadRequestException("The studentId provider is not Student");
+        }
+        TCCRelationships tccRelationships = repository.findByStudent_Id(studentId).orElseThrow(() ->
+                new EntityNotFoundException("TCC not found for the given studentId"));
         return getTCCDTO(tccRelationships);
     }
 
@@ -70,12 +80,12 @@ public class TCCRelationshipsService {
             tccEntity.setTccTitle(tcc.tccTitle());
         }
         if (tcc.tccDeliveryDate() != null && !tcc.tccDeliveryDate().isEmpty()) {
-            LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate());
+            LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate().split("\\.")[0]);
             tccEntity.setTccDeliveryDate(tccDeliveryDate);
             tccEntity.setTccAssessmentDate(tccDeliveryDate.plusDays(7));
         }
         if(tcc.proposalDeliveryDate() != null && !tcc.proposalDeliveryDate().isEmpty()) {
-            LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate());
+            LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate().split("\\.")[0]);
             tccEntity.setProposalDeliveryDate(proposalDeliveryDate);
             tccEntity.setProposalAssessmentDate(proposalDeliveryDate.plusDays(7));
         }
@@ -88,8 +98,8 @@ public class TCCRelationshipsService {
     }
 
     private TCCRelationships getTccRelationships(TCCRelationshipsCreateDTO tcc, User student, User professor) {
-        LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate());
-        LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate());
+        LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate().split("\\.")[0]);
+        LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate().split("\\.")[0]);
         LocalDateTime proposalAssessmentDate = proposalDeliveryDate.plusDays(7);
         LocalDateTime tccAssessmentDate = tccDeliveryDate.plusDays(7);
         TCCRelationships tccRelationships = new TCCRelationships();

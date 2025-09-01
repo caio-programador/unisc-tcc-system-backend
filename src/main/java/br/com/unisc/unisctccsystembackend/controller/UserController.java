@@ -25,7 +25,7 @@ public class UserController {
     private TokenService tokenService;
 
     @GetMapping
-    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "") String name) {
+    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size, @RequestParam(defaultValue = "") String name) {
         Page<UserResponseDTO> users = userService.getUsers(role, page, size, name);
         return ResponseEntity.ok(users);
     }

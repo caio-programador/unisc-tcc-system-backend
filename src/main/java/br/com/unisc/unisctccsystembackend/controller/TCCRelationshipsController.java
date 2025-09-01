@@ -5,12 +5,12 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseD
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsUpdateDTO;
 import br.com.unisc.unisctccsystembackend.service.TCCRelationshipsService;
 import jakarta.validation.Valid;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/relationships")
@@ -19,11 +19,7 @@ public class TCCRelationshipsController {
     private TCCRelationshipsService tccRelationshipsService;
 
     @GetMapping()
-    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(
-            @RequestParam(defaultValue = "") String name,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(@RequestParam(defaultValue = "") String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(tccRelationshipsService.getAllTCCs(name, page, size));
     }
 
@@ -36,6 +32,11 @@ public class TCCRelationshipsController {
     @GetMapping("/{id}")
     public ResponseEntity<TCCRelationshipsResponseDTO> getOneTCCById(@PathVariable Long id) {
         return ResponseEntity.ok(tccRelationshipsService.getOneTCCById(id));
+    }
+
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<TCCRelationshipsResponseDTO> getOneTCCByStudentId(@PathVariable Long studentId) throws BadRequestException {
+        return ResponseEntity.ok(tccRelationshipsService.getOneTCCByStudentId(studentId));
     }
 
     @PatchMapping("/{id}")
