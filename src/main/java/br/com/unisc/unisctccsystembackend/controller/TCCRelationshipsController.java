@@ -3,12 +3,14 @@ package br.com.unisc.unisctccsystembackend.controller;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsCreateDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsUpdateDTO;
+import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.service.TCCRelationshipsService;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -37,6 +39,14 @@ public class TCCRelationshipsController {
     @GetMapping("/student/{studentId}")
     public ResponseEntity<TCCRelationshipsResponseDTO> getOneTCCByStudentId(@PathVariable Long studentId) throws BadRequestException {
         return ResponseEntity.ok(tccRelationshipsService.getOneTCCByStudentId(studentId));
+    }
+
+    @GetMapping("/professor/my-tccs")
+    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getProfessorTCCs(@RequestParam(defaultValue = "")
+    String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+    Authentication authentication) {
+        User professor = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(tccRelationshipsService.getProfessorTCCs(name, page, size, professor));
     }
 
     @PatchMapping("/{id}")

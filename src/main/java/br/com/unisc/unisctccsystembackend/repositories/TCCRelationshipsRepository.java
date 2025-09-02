@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface TCCRelationshipsRepository extends JpaRepository<TCCRelationships, Long> {
     Page<TCCRelationships> findByStudent_NameContainingIgnoreCase(String name, Pageable pageable);
     Optional<TCCRelationships> findByStudent_Id(Long id);
+
+    Page<TCCRelationships> findByProfessor_IdAndStudent_NameContainingIgnoreCase(Long id, String name, Pageable pageable);
 }

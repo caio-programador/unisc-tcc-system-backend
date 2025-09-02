@@ -67,6 +67,14 @@ public class TCCRelationshipsService {
         return getTCCDTO(tccRelationships);
     }
 
+    public Page<TCCRelationshipsResponseDTO> getProfessorTCCs(String name, int page, int size, User professor) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TCCRelationships> tccs = repository.findByProfessor_IdAndStudent_NameContainingIgnoreCase(professor.getId(), name, pageable);
+
+        List<TCCRelationshipsResponseDTO> formattedTccList = tccs.stream().map(this::getTCCDTO).toList();
+        return new PageImpl<>(formattedTccList, pageable, tccs.getTotalElements());
+    }
+
     public void updateOneTCCById(TCCRelationshipsUpdateDTO tcc, Long tccId) throws Exception {
         TCCRelationships tccEntity = repository.findById(tccId).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
         if(tcc.professorId() != null) {
@@ -135,4 +143,5 @@ public class TCCRelationshipsService {
                         )
                 );
     }
+
 }
