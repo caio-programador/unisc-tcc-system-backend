@@ -17,7 +17,7 @@ public class Deliverables {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "tcc_id")
     private TCCRelationships tcc;
 

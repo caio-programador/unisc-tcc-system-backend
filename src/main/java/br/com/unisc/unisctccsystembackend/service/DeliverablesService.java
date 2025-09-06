@@ -93,6 +93,16 @@ public class DeliverablesService {
         if (deliverableDTO.tccId() != null) {
             throw new BadRequestException("TCC Id cannot be changed.");
         }
+
+        if(deliverableDTO.tccTitle() != null){
+            TCCRelationships tcc = existingDeliverable.getTcc();
+            tcc.setTccTitle(deliverableDTO.tccTitle());
+            try {
+                tccRelationshipsRepository.save(tcc);
+            }catch (Exception e) {
+                throw new BadRequestException("Erro ao salvar o título do TCC: ");
+            }
+        }
         if (deliverableDTO.file() != null && !deliverableDTO.file().isEmpty()) {
             try {
                 s3Service.deleteFile(existingDeliverable.getBucketFileKey());
