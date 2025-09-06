@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity(name = "tcc_relationships")
 @Table(name = "tcc_relationships")
@@ -29,4 +30,8 @@ public class TCCRelationships {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "professor_id")
     private User professor;
+
+    @OneToMany(mappedBy = "tcc")
+    private List<Deliverables> deliverables;
+
 }
