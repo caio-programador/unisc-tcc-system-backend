@@ -1,6 +1,5 @@
 package br.com.unisc.unisctccsystembackend.entities.DTO;
 
-import java.time.LocalDateTime;
 
 public record EvaluationRequestDTO(
         Long deliveryId,

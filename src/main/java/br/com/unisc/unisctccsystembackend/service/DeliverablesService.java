@@ -115,6 +115,7 @@ public class DeliverablesService {
         if (deliverableDTO.deliveryType() != null) {
             existingDeliverable.setDeliveryType(deliverableDTO.deliveryType());
         }
+        existingDeliverable.setDeliveryStatus(DeliveryStatus.AGUARDANDO_AVALIACAO);
         try {
             deliverablesRepository.save(existingDeliverable);
         } catch (DataIntegrityViolationException e) {
