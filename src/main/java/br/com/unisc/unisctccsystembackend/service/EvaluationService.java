@@ -33,18 +33,24 @@ public class EvaluationService {
         Deliverables delivery = deliverablesRepository.findById(dto.deliveryId())
                 .orElseThrow(() -> new EntityNotFoundException("Delivery not found"));
 
-        // regra: professor deve ser o orientador
-        if (!delivery.getTcc().getProfessor().getId().equals(professor.getId())) {
-            throw new BadRequestException("You are not allowed to evaluate this delivery");
-        }
+        verifyProfessorPermission(delivery, professor);
 
-        if(dto.total() < 7)
-            if (delivery.getDeliveryType().equals(DeliveryType.REELABORACAO_PROPOSTA))
-                deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REELABORACAO_REPROVADA);
+        double thisEvaluationTotal = dto.goals() + dto.introduction() + dto.bibliographyRevision() + dto.methodology();
+
+        delivery.setTotalScore(delivery.getTotalScore() + thisEvaluationTotal);
+        delivery.setAverageScore(delivery.getTotalScore() / 3);
+        delivery.setQuantityEvaluations(delivery.getQuantityEvaluations() + 1);
+
+        if(delivery.getQuantityEvaluations() == 3){
+            if (delivery.getAverageScore() < 7)
+                if (delivery.getDeliveryType().equals(DeliveryType.REELABORACAO_PROPOSTA))
+                    deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REELABORACAO_REPROVADA);
+                else
+                    deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REPROVADO);
             else
-                deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REPROVADO);
-        else
-            deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.APROVADO);
+                deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.APROVADO);
+        }
+        deliverablesRepository.save(delivery);
 
         Evaluation evaluation = new Evaluation();
         evaluation.setDelivery(delivery);
@@ -53,7 +59,7 @@ public class EvaluationService {
         evaluation.setGoals(dto.goals());
         evaluation.setBibliographyRevision(dto.bibliographyRevision());
         evaluation.setMethodology(dto.methodology());
-        evaluation.setTotal(dto.total());
+        evaluation.setTotal(thisEvaluationTotal);
         evaluation.setComments(dto.comments());
         evaluation.setEvaluationDate(LocalDateTime.now());
 
@@ -65,18 +71,20 @@ public class EvaluationService {
         Evaluation evaluation = evaluationRepository.findById(evaluationId)
                 .orElseThrow(() -> new EntityNotFoundException("Evaluation not found"));
 
-        // apenas o mesmo professor pode atualizar
-        if (!evaluation.getProfessor().getId().equals(professor.getId())) {
-            throw new BadRequestException("You are not allowed to update this evaluation");
-        }
+        verifyProfessorPermission(evaluation.getDelivery(), professor);
 
         if (dto.introduction() != null) evaluation.setIntroduction(dto.introduction());
         if (dto.goals() != null) evaluation.setGoals(dto.goals());
         if (dto.bibliographyRevision() != null) evaluation.setBibliographyRevision(dto.bibliographyRevision());
         if (dto.methodology() != null) evaluation.setMethodology(dto.methodology());
-        if (dto.total() != null) {
-            evaluation.setTotal(dto.total());
-            if(dto.total() < 7)
+
+        double thisEvaluationTotal = evaluation.getIntroduction() + evaluation.getGoals() + evaluation.getBibliographyRevision() + evaluation.getMethodology();
+        evaluation.setTotal(thisEvaluationTotal);
+        evaluation.getDelivery().setTotalScore(evaluation.getDelivery().getTotalScore() + thisEvaluationTotal);
+        evaluation.getDelivery().setAverageScore(evaluation.getDelivery().getTotalScore() / 3);
+
+        if(evaluation.getDelivery().getQuantityEvaluations() == 3){
+            if (evaluation.getDelivery().getAverageScore() < 7)
                 if (evaluation.getDelivery().getDeliveryType().equals(DeliveryType.REELABORACAO_PROPOSTA))
                     deliverablesService.updateDeliverableStatus(evaluation.getDelivery().getId(), DeliveryStatus.REELABORACAO_REPROVADA);
                 else
@@ -84,6 +92,7 @@ public class EvaluationService {
             else
                 deliverablesService.updateDeliverableStatus(evaluation.getDelivery().getId(), DeliveryStatus.APROVADO);
         }
+        deliverablesRepository.save(evaluation.getDelivery());
         if (dto.comments() != null) evaluation.setComments(dto.comments());
 
         evaluation.setEvaluationDate(LocalDateTime.now());
@@ -103,30 +112,13 @@ public class EvaluationService {
                 evaluation.getId(),
                 new DeliveryResponseDTO(
                         evaluation.getDelivery().getId(),
-                        new TCCRelationshipsResponseDTO(
-                                evaluation.getDelivery().getTcc().getId(),
-                                evaluation.getDelivery().getTcc().getTccTitle(),
-                                evaluation.getDelivery().getTcc().getProposalDeliveryDate(),
-                                evaluation.getDelivery().getTcc().getTccDeliveryDate(),
-                                evaluation.getDelivery().getTcc().getProposalAssessmentDate(),
-                                evaluation.getDelivery().getTcc().getTccAssessmentDate(),
-                                new UserResponseDTO(
-                                        evaluation.getDelivery().getTcc().getStudent().getId(),
-                                        evaluation.getDelivery().getTcc().getStudent().getName(),
-                                        evaluation.getDelivery().getTcc().getStudent().getEmail(),
-                                        evaluation.getDelivery().getTcc().getStudent().getRole().name()
-                                ),
-                                new UserResponseDTO(
-                                        evaluation.getDelivery().getTcc().getProfessor().getId(),
-                                        evaluation.getDelivery().getTcc().getProfessor().getName(),
-                                        evaluation.getDelivery().getTcc().getProfessor().getEmail(),
-                                        evaluation.getDelivery().getTcc().getProfessor().getRole().name()
-                                )
-                        ),
+                        evaluation.getDelivery().getTcc().getId(),
                         evaluation.getDelivery().getDeliveryType(),
                         evaluation.getDelivery().getDeliveryStatus(),
                         evaluation.getDelivery().getBucketFileKey(),
-                        evaluation.getDelivery().getDeliveryDate()
+                        evaluation.getDelivery().getDeliveryDate(),
+                        evaluation.getDelivery().getQuantityEvaluations(),
+                        evaluation.getDelivery().getAverageScore()
                 ),
                 new UserResponseDTO(
                         evaluation.getProfessor().getId(),
@@ -142,5 +134,13 @@ public class EvaluationService {
                 evaluation.getComments(),
                 evaluation.getEvaluationDate()
         );
+    }
+
+    private void verifyProfessorPermission(Deliverables delivery, User professor) throws BadRequestException {
+        if (!delivery.getTcc().getProfessor().getId().equals(professor.getId()) &&
+        !delivery.getTcc().getDefensePanel().getProfessor2().getId().equals(professor.getId()) &&
+        !delivery.getTcc().getDefensePanel().getProfessor3().getId().equals(professor.getId())) {
+            throw new BadRequestException("You are not allowed to evaluate this delivery");
+        }
     }
 }

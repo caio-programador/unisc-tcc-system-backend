@@ -7,6 +7,5 @@ public record EvaluationRequestDTO(
         Double goals,
         Double bibliographyRevision,
         Double methodology,
-        Double total,
         String comments
 ) {}

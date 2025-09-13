@@ -23,7 +23,7 @@ public class EvaluationController {
         return ResponseEntity.ok(evaluationService.getEvaluationsByDeliveryId(deliveryId));
     }
 
-    @GetMapping("/{deliveryId/{professorId}")
+    @GetMapping("/{deliveryId}/{professorId}")
     public ResponseEntity<EvaluationResponseDTO> getEvaluationByProfessor(@PathVariable Long deliveryId,
                                                                           @PathVariable Long professorId) {
         return ResponseEntity.ok(evaluationService.getEvaluationByDeliveryIdAndProfessorId(deliveryId, professorId));

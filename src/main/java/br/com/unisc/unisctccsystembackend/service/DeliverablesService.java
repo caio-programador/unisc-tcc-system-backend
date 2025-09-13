@@ -56,6 +56,10 @@ public class DeliverablesService {
         }
         Deliverables deliverable = mapToEntity(deliverableDTO, tcc, bucketFileKey);
 
+        deliverable.setQuantityEvaluations(0);
+        deliverable.setAverageScore(0.0);
+        deliverable.setTotalScore(0.0);
+
         deliverablesRepository.save(deliverable);
     }
 
@@ -142,30 +146,13 @@ public class DeliverablesService {
     private DeliveryResponseDTO mapToDTO(Deliverables deliverable) {
         return new DeliveryResponseDTO(
                 deliverable.getId(),
-                new TCCRelationshipsResponseDTO(
-                        deliverable.getTcc().getId(),
-                        deliverable.getTcc().getTccTitle(),
-                        deliverable.getTcc().getProposalDeliveryDate(),
-                        deliverable.getTcc().getTccDeliveryDate(),
-                        deliverable.getTcc().getProposalAssessmentDate(),
-                        deliverable.getTcc().getTccAssessmentDate(),
-                        new UserResponseDTO(
-                                deliverable.getTcc().getStudent().getId(),
-                                deliverable.getTcc().getStudent().getName(),
-                                deliverable.getTcc().getStudent().getEmail(),
-                                deliverable.getTcc().getStudent().getRole().name()
-                        ),
-                        new UserResponseDTO(
-                                deliverable.getTcc().getProfessor().getId(),
-                                deliverable.getTcc().getProfessor().getName(),
-                                deliverable.getTcc().getProfessor().getEmail(),
-                                deliverable.getTcc().getProfessor().getRole().name()
-                        )
-                ),
+                deliverable.getTcc().getId(),
                 deliverable.getDeliveryType(),
                 deliverable.getDeliveryStatus(),
                 deliverable.getBucketFileKey(),
-                deliverable.getDeliveryDate()
+                deliverable.getDeliveryDate(),
+                deliverable.getQuantityEvaluations(),
+                deliverable.getAverageScore()
         );
     }
 

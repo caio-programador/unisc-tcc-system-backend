@@ -1,12 +1,8 @@
 package br.com.unisc.unisctccsystembackend.service;
 
-import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsCreateDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsUpdateDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.TCCRelationships;
-import br.com.unisc.unisctccsystembackend.entities.User;
-import br.com.unisc.unisctccsystembackend.entities.UserRole;
+import br.com.unisc.unisctccsystembackend.entities.*;
+import br.com.unisc.unisctccsystembackend.entities.DTO.*;
+import br.com.unisc.unisctccsystembackend.repositories.DefensePanelRepository;
 import br.com.unisc.unisctccsystembackend.repositories.TCCRelationshipsRepository;
 import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,7 +14,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +24,9 @@ public class TCCRelationshipsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private DefensePanelRepository defensePanelRepository;
 
     public Page<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -48,7 +46,21 @@ public class TCCRelationshipsService {
         if(professor.getRole() != UserRole.PROFESSOR) {
             throw new BadRequestException("The professorId provider is not Professor");
         }
-        TCCRelationships tccRelationships = getTccRelationships(tcc, student, professor);
+
+        verifyProfessors(professor.getId(), tcc.professor2Id(), tcc.professor3Id());
+
+        User professor2 = userRepository.findById(tcc.professor2Id()).orElseThrow(() -> new EntityNotFoundException("Professor not found"));
+        if(professor2.getRole() != UserRole.PROFESSOR) {
+            throw new BadRequestException("The professor2Id provider is not Professor");
+        }
+
+        User professor3 = userRepository.findById(tcc.professor3Id()).orElseThrow(() -> new EntityNotFoundException("Professor not found"));
+        if(professor3.getRole() != UserRole.PROFESSOR) {
+            throw new BadRequestException("The professor3Id provider is not Professor");
+        }
+
+
+        TCCRelationships tccRelationships = getTccRelationships(tcc, student, professor, professor2, professor3);
         repository.save(tccRelationships);
     }
 
@@ -78,12 +90,34 @@ public class TCCRelationshipsService {
     public void updateOneTCCById(TCCRelationshipsUpdateDTO tcc, Long tccId) throws Exception {
         TCCRelationships tccEntity = repository.findById(tccId).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
         if(tcc.professorId() != null) {
+            verifyProfessors(tcc.professorId(), tccEntity.getDefensePanel().getProfessor2().getId(),
+                    tccEntity.getDefensePanel().getProfessor3().getId());
             User professor = userRepository.findById(tcc.professorId()).orElseThrow(() -> new EntityNotFoundException("Professor not found"));
             if(professor.getRole() != UserRole.PROFESSOR) {
                 throw new BadRequestException("The professorId provider is not Professor");
             }
             tccEntity.setProfessor(professor);
         }
+        if(tcc.professor2Id() != null) {
+            verifyProfessors(tccEntity.getProfessor().getId(), tcc.professor2Id(),
+                    tccEntity.getDefensePanel().getProfessor3().getId());
+            User professor2 = userRepository.findById(tcc.professor2Id()).orElseThrow(() -> new EntityNotFoundException("Professor not found"));
+            if(professor2.getRole() != UserRole.PROFESSOR) {
+                throw new BadRequestException("The professor2Id provider is not Professor");
+            }
+            tccEntity.getDefensePanel().setProfessor2(professor2);
+        }
+
+        if(tcc.professor3Id() != null) {
+            verifyProfessors(tccEntity.getProfessor().getId(),
+                    tccEntity.getDefensePanel().getProfessor2().getId(), tcc.professor3Id());
+            User professor3 = userRepository.findById(tcc.professor3Id()).orElseThrow(() -> new EntityNotFoundException("Professor not found"));
+            if(professor3.getRole() != UserRole.PROFESSOR) {
+                throw new BadRequestException("The professor3Id provider is not Professor");
+            }
+            tccEntity.getDefensePanel().setProfessor3(professor3);
+        }
+
         if(tcc.tccTitle() != null && !tcc.tccTitle().isEmpty()) {
             tccEntity.setTccTitle(tcc.tccTitle());
         }
@@ -97,6 +131,13 @@ public class TCCRelationshipsService {
             tccEntity.setProposalDeliveryDate(proposalDeliveryDate);
             tccEntity.setProposalAssessmentDate(proposalDeliveryDate.plusDays(7));
         }
+
+        if(tcc.admissibility() != null && !tcc.admissibility().isEmpty()) {
+            tccEntity.setAdmissibility(Admissibility.valueOf(tcc.admissibility()));
+        }
+
+        defensePanelRepository.save(tccEntity.getDefensePanel());
+
         repository.save(tccEntity);
     }
 
@@ -105,7 +146,8 @@ public class TCCRelationshipsService {
         repository.delete(tccEntity);
     }
 
-    private TCCRelationships getTccRelationships(TCCRelationshipsCreateDTO tcc, User student, User professor) {
+    private TCCRelationships getTccRelationships(TCCRelationshipsCreateDTO tcc, User student, User professor,
+                                                 User professor2, User professor3) {
         LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate().split("\\.")[0]);
         LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate().split("\\.")[0]);
         LocalDateTime proposalAssessmentDate = proposalDeliveryDate.plusDays(7);
@@ -117,6 +159,13 @@ public class TCCRelationshipsService {
         tccRelationships.setTccAssessmentDate(tccAssessmentDate);
         tccRelationships.setStudent(student);
         tccRelationships.setProfessor(professor);
+        DefensePanel defensePanel = new DefensePanel();
+        defensePanel.setProfessor1(professor);
+        defensePanel.setProfessor2(professor2);
+        defensePanel.setProfessor3(professor3);
+        defensePanel = defensePanelRepository.save(defensePanel);
+        tccRelationships.setDefensePanel(defensePanel);
+        tccRelationships.setAdmissibility(Admissibility.PENDING);
         return tccRelationships;
     }
 
@@ -135,6 +184,15 @@ public class TCCRelationshipsService {
                                 tcc.getStudent().getEmail(),
                                 tcc.getStudent().getRole().name()
                         ),
+                        tcc.getAdmissibility(),
+                        new DefensePanelDTO(
+                                tcc.getDefensePanel().getProfessor1().getId(),
+                                tcc.getDefensePanel().getProfessor1().getName(),
+                                tcc.getDefensePanel().getProfessor2().getId(),
+                                tcc.getDefensePanel().getProfessor2().getName(),
+                                tcc.getDefensePanel().getProfessor3().getId(),
+                                tcc.getDefensePanel().getProfessor3().getName()
+                        ),
                         new UserResponseDTO(
                                 tcc.getProfessor().getId(),
                                 tcc.getProfessor().getName(),
@@ -143,5 +201,21 @@ public class TCCRelationshipsService {
                         )
                 );
     }
+    private void verifyProfessors(Long professorId, Long professor2Id, Long professor3Id) throws BadRequestException {
+        if(professorId.equals(professor2Id)) {
+            throw new BadRequestException("The professor2Id provider cannot be the same as professorId");
+        }
+        if (professorId.equals(professor3Id)) {
+            throw new BadRequestException("The professor3Id provider cannot be the same as professorId");
+        }
+        if(professor2Id.equals(professor3Id)) {
+            throw new BadRequestException("The professor3Id provider cannot be the same as professor2Id");
+        }
+    }
 
+    public void updateAdmissibility(Long id, Admissibility admissibility) {
+        TCCRelationships tcc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
+        tcc.setAdmissibility(admissibility);
+        repository.save(tcc);
+    }
 }
