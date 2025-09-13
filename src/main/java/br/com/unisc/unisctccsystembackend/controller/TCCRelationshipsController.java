@@ -1,8 +1,10 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
+import br.com.unisc.unisctccsystembackend.entities.Admissibility;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsCreateDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsUpdateDTO;
+import br.com.unisc.unisctccsystembackend.entities.DTO.UpdateAdmissibilityDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.service.TCCRelationshipsService;
 import jakarta.validation.Valid;
@@ -21,12 +23,16 @@ public class TCCRelationshipsController {
     private TCCRelationshipsService tccRelationshipsService;
 
     @GetMapping()
-    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(@RequestParam(defaultValue = "") String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(tccRelationshipsService.getAllTCCs(name, page, size));
+    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(@RequestParam(defaultValue = "") String name,
+                                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                                    @RequestParam(defaultValue = "10") int size,
+                                                                                    Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(tccRelationshipsService.getAllTCCs(name, page, size, user));
     }
 
     @PostMapping()
-    public ResponseEntity saveTCCRelationships(@Valid @RequestBody TCCRelationshipsCreateDTO tccRelationshipsCreateDTO) throws Exception {
+    public ResponseEntity<Void> saveTCCRelationships(@Valid @RequestBody TCCRelationshipsCreateDTO tccRelationshipsCreateDTO) throws Exception {
         tccRelationshipsService.save(tccRelationshipsCreateDTO);
         return ResponseEntity.noContent().build();
     }
@@ -41,23 +47,21 @@ public class TCCRelationshipsController {
         return ResponseEntity.ok(tccRelationshipsService.getOneTCCByStudentId(studentId));
     }
 
-    @GetMapping("/professor/my-tccs")
-    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getProfessorTCCs(@RequestParam(defaultValue = "")
-    String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
-    Authentication authentication) {
-        User professor = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(tccRelationshipsService.getProfessorTCCs(name, page, size, professor));
-    }
-
     @PatchMapping("/{id}")
-    public ResponseEntity updateTccRelationships(@PathVariable Long id, @RequestBody TCCRelationshipsUpdateDTO tccRelationshipsUpdateDTO) throws Exception {
+    public ResponseEntity<Void> updateTccRelationships(@PathVariable Long id, @RequestBody TCCRelationshipsUpdateDTO tccRelationshipsUpdateDTO) throws Exception {
         tccRelationshipsService.updateOneTCCById(tccRelationshipsUpdateDTO, id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteTccRelationships(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTccRelationships(@PathVariable Long id) {
         tccRelationshipsService.deleteOneTCCById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/admissibility/{id}")
+    public ResponseEntity<Void> updateAdmissibility(@PathVariable Long id, @RequestBody @Valid UpdateAdmissibilityDTO updateAdmissibilityDTO) {
+        tccRelationshipsService.updateAdmissibility(id, updateAdmissibilityDTO.admissibility());
         return ResponseEntity.noContent().build();
     }
 }

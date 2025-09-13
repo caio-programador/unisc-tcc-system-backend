@@ -29,4 +29,9 @@ public class Deliverables {
 
     private String bucketFileKey;
 
+    private int quantityEvaluations;
+    private Double totalScore;
+    private Double averageScore;
+
+
 }

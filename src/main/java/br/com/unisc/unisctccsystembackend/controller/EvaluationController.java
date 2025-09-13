@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/evaluations")
 public class EvaluationController {
@@ -17,8 +19,14 @@ public class EvaluationController {
     private EvaluationService evaluationService;
 
     @GetMapping("/{deliveryId}")
-    public ResponseEntity<EvaluationResponseDTO> getEvaluation(@PathVariable Long deliveryId) {
-        return ResponseEntity.ok(evaluationService.getEvaluationByDeliveryId(deliveryId));
+    public ResponseEntity<List<EvaluationResponseDTO>> getEvaluations(@PathVariable Long deliveryId) {
+        return ResponseEntity.ok(evaluationService.getEvaluationsByDeliveryId(deliveryId));
+    }
+
+    @GetMapping("/{deliveryId}/{professorId}")
+    public ResponseEntity<EvaluationResponseDTO> getEvaluationByProfessor(@PathVariable Long deliveryId,
+                                                                          @PathVariable Long professorId) {
+        return ResponseEntity.ok(evaluationService.getEvaluationByDeliveryIdAndProfessorId(deliveryId, professorId));
     }
 
     @PostMapping

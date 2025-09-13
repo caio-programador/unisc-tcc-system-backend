@@ -34,4 +34,11 @@ public class TCCRelationships {
     @OneToMany(mappedBy = "tcc")
     private List<Deliverables> deliverables;
 
+    @OneToOne
+    @JoinColumn(name = "defense_panel_id")
+    private DefensePanel defensePanel;
+
+    @Column(nullable = true)
+    private Admissibility admissibility;
+
 }
