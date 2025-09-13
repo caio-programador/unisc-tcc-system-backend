@@ -28,12 +28,20 @@ public class TCCRelationshipsService {
     @Autowired
     private DefensePanelRepository defensePanelRepository;
 
-    public Page<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size) {
+    public Page<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size, User currentUser) {
         Pageable pageable = PageRequest.of(page, size);
         Page<TCCRelationships> tccs = repository.findByStudent_NameContainingIgnoreCase(name, pageable);
 
 
         List<TCCRelationshipsResponseDTO> formattedTccList = tccs.stream().map(this::getTCCDTO).toList();
+
+        if(currentUser.getRole().equals(UserRole.PROFESSOR)) {
+            formattedTccList = formattedTccList.stream().filter(tcc -> tcc.defensePanel().professor1Id().equals(currentUser.getId())
+                    || tcc.defensePanel().professor2Id().equals(currentUser.getId())
+                    || tcc.defensePanel().professor3Id().equals(currentUser.getId())).toList();
+        }
+
+
         return new PageImpl<>(formattedTccList, pageable, tccs.getTotalElements());
     }
 
@@ -77,14 +85,6 @@ public class TCCRelationshipsService {
         TCCRelationships tccRelationships = repository.findByStudent_Id(studentId).orElseThrow(() ->
                 new EntityNotFoundException("TCC not found for the given studentId"));
         return getTCCDTO(tccRelationships);
-    }
-
-    public Page<TCCRelationshipsResponseDTO> getProfessorTCCs(String name, int page, int size, User professor) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<TCCRelationships> tccs = repository.findByProfessor_IdAndStudent_NameContainingIgnoreCase(professor.getId(), name, pageable);
-
-        List<TCCRelationshipsResponseDTO> formattedTccList = tccs.stream().map(this::getTCCDTO).toList();
-        return new PageImpl<>(formattedTccList, pageable, tccs.getTotalElements());
     }
 
     public void updateOneTCCById(TCCRelationshipsUpdateDTO tcc, Long tccId) throws Exception {

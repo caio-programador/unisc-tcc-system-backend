@@ -23,8 +23,12 @@ public class TCCRelationshipsController {
     private TCCRelationshipsService tccRelationshipsService;
 
     @GetMapping()
-    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(@RequestParam(defaultValue = "") String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(tccRelationshipsService.getAllTCCs(name, page, size));
+    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getAllTCCRelationships(@RequestParam(defaultValue = "") String name,
+                                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                                    @RequestParam(defaultValue = "10") int size,
+                                                                                    Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(tccRelationshipsService.getAllTCCs(name, page, size, user));
     }
 
     @PostMapping()
@@ -41,14 +45,6 @@ public class TCCRelationshipsController {
     @GetMapping("/student/{studentId}")
     public ResponseEntity<TCCRelationshipsResponseDTO> getOneTCCByStudentId(@PathVariable Long studentId) throws BadRequestException {
         return ResponseEntity.ok(tccRelationshipsService.getOneTCCByStudentId(studentId));
-    }
-
-    @GetMapping("/professor/my-tccs")
-    public ResponseEntity<Page<TCCRelationshipsResponseDTO>> getProfessorTCCs(@RequestParam(defaultValue = "")
-    String name, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
-    Authentication authentication) {
-        User professor = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(tccRelationshipsService.getProfessorTCCs(name, page, size, professor));
     }
 
     @PatchMapping("/{id}")
