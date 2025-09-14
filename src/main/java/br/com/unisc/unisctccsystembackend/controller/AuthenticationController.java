@@ -16,6 +16,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("auth")
 public class AuthenticationController {
@@ -28,7 +30,7 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.name(), data.password());
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
         var token = tokenService.generateToken((User) auth.getPrincipal());
@@ -38,7 +40,7 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody @Valid RegisterDTO data){
-        if(this.repository.findByName(data.name()) != null) return ResponseEntity.badRequest().build();
+        if(this.repository.findByEmail(data.email()) != null) return ResponseEntity.badRequest().build();
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
         User newUser = new User(data.name(), data.email(), encryptedPassword, data.role());
@@ -49,19 +51,14 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public UserResponseDTO me(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> me(org.springframework.security.core.Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        return new UserResponseDTO(
+        return ResponseEntity.ok(new UserResponseDTO(
+                user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
-       );
+       ));
     }
-
-    @GetMapping("/hello")
-    public String helloWorld() {
-        return "Hello, World!";
-    }
-
 }

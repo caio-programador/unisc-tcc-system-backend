@@ -1,10 +1,7 @@
 package br.com.unisc.unisctccsystembackend.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +11,7 @@ import java.util.List;
 @Entity(name = "users")
 @Table(name = "users")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
@@ -28,6 +26,13 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
+
+    @OneToOne(mappedBy = "student")
+    private TCCRelationships tccRelationships;
+
+    @OneToMany(mappedBy = "professor")
+    private List<TCCRelationships> tccs;
+
 
     public User(String name, String email, String password, UserRole role){
         this.name = name;
