@@ -77,4 +77,9 @@ public class AuthenticationController {
                 ): null
         ));
     }
+
+    @GetMapping("/healthy")
+    public ResponseEntity<String> healthy() {
+        return ResponseEntity.ok("OK");
+    }
 }
