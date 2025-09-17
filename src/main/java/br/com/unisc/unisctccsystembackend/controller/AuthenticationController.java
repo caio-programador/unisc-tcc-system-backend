@@ -1,10 +1,7 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
 
-import br.com.unisc.unisctccsystembackend.entities.DTO.AuthenticationDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.LoginResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.RegisterDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
+import br.com.unisc.unisctccsystembackend.entities.DTO.*;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
 import br.com.unisc.unisctccsystembackend.security.TokenService;
@@ -51,14 +48,33 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> me(org.springframework.security.core.Authentication authentication) {
+    public ResponseEntity<UserGetMeResponseDTO> me(org.springframework.security.core.Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new UserResponseDTO(
+        return ResponseEntity.ok(new UserGetMeResponseDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
-       ));
+                user.getRole().name(),
+                user.getTccRelationships() != null ? new TCCRelationshipsResponseDTO(
+                        user.getTccRelationships().getId(),
+                        user.getTccRelationships().getTccTitle(),
+                        user.getTccRelationships().getProposalDeliveryDate(),
+                        user.getTccRelationships().getTccDeliveryDate(),
+                        user.getTccRelationships().getProposalAssessmentDate(),
+                        user.getTccRelationships().getTccAssessmentDate(),
+                        null,
+                        user.getTccRelationships().getAdmissibility(),
+                        new DefensePanelDTO(
+                                user.getTccRelationships().getDefensePanel().getProfessor1().getId(),
+                                user.getTccRelationships().getDefensePanel().getProfessor1().getName(),
+                                user.getTccRelationships().getDefensePanel().getProfessor2().getId(),
+                                user.getTccRelationships().getDefensePanel().getProfessor2().getName(),
+                                user.getTccRelationships().getDefensePanel().getProfessor3().getId(),
+                                user.getTccRelationships().getDefensePanel().getProfessor3().getName()
+                        ),
+                        null
+                ): null
+        ));
     }
 }

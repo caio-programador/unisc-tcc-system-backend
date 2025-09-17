@@ -13,6 +13,7 @@ public record DeliveryResponseDTO(
         String bucketFileKey,
         LocalDateTime deliveryDate,
         int quantityEvaluations,
-        Double averageScore
+        Double averageScore,
+        LocalDateTime updatedAt
 ) {
 }
