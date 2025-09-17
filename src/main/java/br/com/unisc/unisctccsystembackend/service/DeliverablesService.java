@@ -152,7 +152,8 @@ public class DeliverablesService {
                 deliverable.getBucketFileKey(),
                 deliverable.getDeliveryDate(),
                 deliverable.getQuantityEvaluations(),
-                deliverable.getAverageScore()
+                deliverable.getAverageScore(),
+                deliverable.getUpdatedAt()
         );
     }
 

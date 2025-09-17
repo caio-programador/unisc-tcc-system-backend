@@ -22,7 +22,7 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public Page<UserResponseDTO> getUsers(String role, int page, int size, String name) {
+    public Page<UserResponseDTO> getUsers(String role, int page, int size, String name, User currentUser) {
         Page<User> users;
         Pageable pageable = PageRequest.of(page, size);
 
@@ -35,6 +35,17 @@ public class UserService {
         }else {
             users = userRepository.findAll(pageable);
         }
+
+        if(currentUser.getRole().equals(UserRole.PROFESSOR)) {
+            users = new PageImpl<>(users.filter(user -> {
+                        if(user.getTccRelationships() == null) return false;
+                        return user.getTccRelationships().getDefensePanel().getProfessor1().getId().equals(currentUser.getId()) ||
+                                user.getTccRelationships().getDefensePanel().getProfessor2().getId().equals(currentUser.getId()) ||
+                                user.getTccRelationships().getDefensePanel().getProfessor3().getId().equals(currentUser.getId());
+                    }
+            ).toList());
+        }
+
         List<UserResponseDTO> formattedUsersList = users.stream().map(this::toDTO).toList();
         return new PageImpl<UserResponseDTO>(formattedUsersList, pageable, users.getTotalElements());
     }

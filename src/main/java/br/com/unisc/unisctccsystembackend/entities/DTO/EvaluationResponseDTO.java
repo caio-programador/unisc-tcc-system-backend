@@ -11,5 +11,6 @@ public record EvaluationResponseDTO(
         Double methodology,
         Double total,
         String comments,
-        LocalDateTime evaluationDate
+        LocalDateTime evaluationDate,
+        LocalDateTime updatedAt
 ) {}

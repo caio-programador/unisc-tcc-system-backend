@@ -118,7 +118,8 @@ public class EvaluationService {
                         evaluation.getDelivery().getBucketFileKey(),
                         evaluation.getDelivery().getDeliveryDate(),
                         evaluation.getDelivery().getQuantityEvaluations(),
-                        evaluation.getDelivery().getAverageScore()
+                        evaluation.getDelivery().getAverageScore(),
+                        evaluation.getDelivery().getUpdatedAt()
                 ),
                 new UserResponseDTO(
                         evaluation.getProfessor().getId(),
@@ -132,7 +133,8 @@ public class EvaluationService {
                 evaluation.getMethodology(),
                 evaluation.getTotal(),
                 evaluation.getComments(),
-                evaluation.getEvaluationDate()
+                evaluation.getEvaluationDate(),
+                evaluation.getUpdatedAt()
         );
     }
 
