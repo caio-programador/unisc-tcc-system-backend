@@ -33,6 +33,7 @@ public class SecurityConfigurations {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/healthy").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/relationships/admissibility/**").hasRole("PROFESSOR")
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("COORDENADOR")
                         .requestMatchers(HttpMethod.GET, "/relationships").hasRole("PROFESSOR")
