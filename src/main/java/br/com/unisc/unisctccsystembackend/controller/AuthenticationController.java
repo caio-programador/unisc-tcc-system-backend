@@ -79,7 +79,7 @@ public class AuthenticationController {
     }
 
     @GetMapping("/healthy")
-    public ResponseEntity<String> healthy() {
-        return ResponseEntity.ok("OK");
+    public ResponseEntity<HealthCheckDTO> healthy() {
+        return ResponseEntity.ok(new HealthCheckDTO("ok"));
     }
 }

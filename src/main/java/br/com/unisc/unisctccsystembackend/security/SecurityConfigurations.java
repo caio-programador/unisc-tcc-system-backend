@@ -34,6 +34,7 @@ public class SecurityConfigurations {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/healthy").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/relationships/admissibility/**").hasRole("PROFESSOR")
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("COORDENADOR")
                         .requestMatchers(HttpMethod.GET, "/relationships").hasRole("PROFESSOR")
@@ -59,7 +60,8 @@ public class SecurityConfigurations {
 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://127.0.0.1:5173", "http://localhost:5173", "http://*.amazonaws.com"));
+        corsConfiguration.setAllowedOrigins(List.of("http://127.0.0.1:5173", "http://localhost:5173",
+                "http://*.amazonaws.com", "http://3.133.89.217"));
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowCredentials(true);
