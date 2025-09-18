@@ -1,6 +1,6 @@
-package br.com.unisc.unisctccsystembackend.meetings.dto;
+package br.com.unisc.unisctccsystembackend.entities.DTO;
 
-import br.com.unisc.unisctccsystembackend.meetings.entity.Meeting;
+import br.com.unisc.unisctccsystembackend.entities.Meeting;
 import java.time.LocalDateTime;
 
 public class MeetingResponse {

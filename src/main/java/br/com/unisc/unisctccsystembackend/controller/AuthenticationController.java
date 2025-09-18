@@ -1,6 +1,5 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
-
 import br.com.unisc.unisctccsystembackend.entities.DTO.AuthenticationDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.LoginResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.RegisterDTO;
@@ -8,7 +7,6 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
 import br.com.unisc.unisctccsystembackend.security.TokenService;
-import br.com.unisc.unisctccsystembackend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,64 +15,44 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("auth")
+@RequestMapping("/auth")
 public class AuthenticationController {
+
     @Autowired
     private AuthenticationManager authenticationManager;
+
     @Autowired
     private UserRepository repository;
+
     @Autowired
     private TokenService tokenService;
 
-    @Autowired
-    private UserService userService;
-
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO data){
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
-
         var token = tokenService.generateToken((User) auth.getPrincipal());
-
         return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody @Valid RegisterDTO data){
-        if(this.repository.findByEmail(data.email()) != null) return ResponseEntity.badRequest().build();
-
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterDTO data){
+        if (this.repository.findByEmail(data.email()) != null) return ResponseEntity.badRequest().build();
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
         User newUser = new User(data.name(), data.email(), encryptedPassword, data.role());
-
         this.repository.save(newUser);
-
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> me(org.springframework.security.core.Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-
         return ResponseEntity.ok(new UserResponseDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
-       ));
+        ));
     }
-
-    @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers(@RequestParam(defaultValue = "") String role){
-        List<UserResponseDTO> users = userService.getUsers(role);
-        return ResponseEntity.ok(users);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
-
 }

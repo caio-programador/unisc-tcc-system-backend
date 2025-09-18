@@ -1,4 +1,4 @@
-package br.com.unisc.unisctccsystembackend.meetings.entity;
+package br.com.unisc.unisctccsystembackend.entities;
 
 
 import jakarta.persistence.*;

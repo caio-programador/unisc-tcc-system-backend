@@ -1,7 +1,7 @@
-package br.com.unisc.unisctccsystembackend.meetings.service;
+package br.com.unisc.unisctccsystembackend.service;
 
-import br.com.unisc.unisctccsystembackend.meetings.entity.Meeting;
-import br.com.unisc.unisctccsystembackend.meetings.repository.MeetingRepository;
+import br.com.unisc.unisctccsystembackend.entities.Meeting;
+import br.com.unisc.unisctccsystembackend.repositories.MeetingRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

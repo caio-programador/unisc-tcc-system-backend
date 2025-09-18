@@ -1,6 +1,6 @@
-package br.com.unisc.unisctccsystembackend.meetings.repository;
+package br.com.unisc.unisctccsystembackend.repositories;
 
-import br.com.unisc.unisctccsystembackend.meetings.entity.Meeting;
+import br.com.unisc.unisctccsystembackend.entities.Meeting;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
