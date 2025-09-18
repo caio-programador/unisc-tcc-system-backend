@@ -1,6 +1,5 @@
 package br.com.unisc.unisctccsystembackend.entities.DTO;
 
-import java.time.LocalDateTime;
 
 public record EvaluationRequestDTO(
         Long deliveryId,
@@ -8,6 +7,5 @@ public record EvaluationRequestDTO(
         Double goals,
         Double bibliographyRevision,
         Double methodology,
-        Double total,
         String comments
 ) {}

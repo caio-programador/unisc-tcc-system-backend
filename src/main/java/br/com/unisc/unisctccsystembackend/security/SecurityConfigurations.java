@@ -33,11 +33,15 @@ public class SecurityConfigurations {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/healthy").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/relationships/admissibility/**").hasRole("PROFESSOR")
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("COORDENADOR")
                         .requestMatchers(HttpMethod.GET, "/relationships").hasRole("PROFESSOR")
                         .requestMatchers(HttpMethod.POST, "/relationships").hasRole("COORDENADOR")
                         .requestMatchers(HttpMethod.DELETE, "/relationships").hasRole("COORDENADOR")
                         .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("COORDENADOR")
+                        .requestMatchers(HttpMethod.GET, "/users").hasRole("PROFESSOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
@@ -56,7 +60,8 @@ public class SecurityConfigurations {
 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of("http://127.0.0.1:5173", "http://localhost:5173"));
+        corsConfiguration.setAllowedOrigins(List.of("http://127.0.0.1:5173", "http://localhost:5173",
+                "http://*.amazonaws.com", "http://3.133.89.217"));
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowCredentials(true);

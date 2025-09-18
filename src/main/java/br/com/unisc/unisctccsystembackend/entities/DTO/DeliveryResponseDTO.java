@@ -7,10 +7,13 @@ import java.time.LocalDateTime;
 
 public record DeliveryResponseDTO(
         Long id,
-        TCCRelationshipsResponseDTO tcc,
+        Long tccId,
         DeliveryType deliveryType,
         DeliveryStatus deliveryStatus,
         String bucketFileKey,
-        LocalDateTime deliveryDate
+        LocalDateTime deliveryDate,
+        int quantityEvaluations,
+        Double averageScore,
+        LocalDateTime updatedAt
 ) {
 }
