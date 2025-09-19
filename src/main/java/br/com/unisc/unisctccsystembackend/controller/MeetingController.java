@@ -54,7 +54,7 @@ public class MeetingController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(path = "/{id}/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateDocument(
             @PathVariable Long id,
             @RequestParam(name = "file") MultipartFile file,
