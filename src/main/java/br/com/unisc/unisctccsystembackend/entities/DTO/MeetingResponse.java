@@ -4,21 +4,21 @@ import br.com.unisc.unisctccsystembackend.entities.Meeting;
 import java.time.LocalDateTime;
 
 public class MeetingResponse {
-    public String id;
+    public Long id;
     public LocalDateTime meetingDate;
     public String subject;
-    public String documentURL;
-    public String studentId;
-    public String advisorId;
+    public String documentName;
+    public String studentName;
+    public String professorName;
 
     public static MeetingResponse from(Meeting m) {
         MeetingResponse r = new MeetingResponse();
         r.id = m.getId();
         r.meetingDate = m.getMeetingDate();
         r.subject = m.getSubject();
-        r.documentURL = m.getDocumentURL();
-        r.studentId = m.getStudentId();
-        r.advisorId = m.getAdvisorId();
+        r.documentName = m.getDocumentName();
+        r.studentName = m.getStudent().getName();
+        r.professorName = m.getProfessor().getName();
         return r;
     }
 }

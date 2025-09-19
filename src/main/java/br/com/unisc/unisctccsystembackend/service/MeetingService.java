@@ -1,8 +1,16 @@
 package br.com.unisc.unisctccsystembackend.service;
 
+import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingBodyDTO;
+import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingResponse;
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
+import br.com.unisc.unisctccsystembackend.entities.User;
+import br.com.unisc.unisctccsystembackend.entities.UserRole;
 import br.com.unisc.unisctccsystembackend.repositories.MeetingRepository;
+import br.com.unisc.unisctccsystembackend.repositories.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,63 +20,98 @@ import java.util.Optional;
 public class MeetingService {
 
     private final MeetingRepository meetingRepository;
+    private final S3Service s3Service;
+    private final UserRepository userRepository;
 
-    public MeetingService(MeetingRepository meetingRepository) {
+    public MeetingService(MeetingRepository meetingRepository,
+                          S3Service s3Service,
+                          UserRepository userRepository) {
         this.meetingRepository = meetingRepository;
+        this.s3Service = s3Service;
+        this.userRepository = userRepository;
     }
 
-    /** Usado pelo Controller: lista com filtros opcionais */
-    public List<Meeting> list(Optional<String> studentId,
-                              Optional<String> advisorId,
-                              Optional<LocalDateTime> start,
-                              Optional<LocalDateTime> end) {
-
-        // prioriza filtros específicos; senão aplica intervalo; senão lista tudo
-        if (studentId.isPresent()) {
-            return meetingRepository.findByStudentId(studentId.get());
+    public List<Meeting> list(Optional<LocalDateTime> start,
+                              User currentUser) {
+        if (currentUser.getRole().equals(UserRole.PROFESSOR)) {
+            if (start.isPresent()) {
+                return meetingRepository.findByProfessorIdAndMeetingDateAfter(currentUser.getId(),
+                        start.get());
+            } else {
+                return meetingRepository.findByProfessorId(currentUser.getId());
+            }
+        } else {
+            if (start.isPresent()) {
+                return meetingRepository.findByStudentIdAndMeetingDateAfter(currentUser.getId(),
+                        start.get());
+            } else {
+                return meetingRepository.findByStudentId(currentUser.getId());
+            }
         }
-        if (advisorId.isPresent()) {
-            return meetingRepository.findByAdvisorId(advisorId.get());
+
+    }
+
+    public MeetingResponse getMeetingById(Long id) {
+        return meetingRepository.findById(id).map(MeetingResponse::from).orElseThrow(() ->
+                new EntityNotFoundException("Meeting not found with id " + id));
+    }
+
+    public void saveMeeting(MeetingBodyDTO meetingBody) throws BadRequestException {
+        User professor = userRepository.findById(meetingBody.professorId()).orElseThrow(() ->
+                new EntityNotFoundException("User not found with id " + meetingBody.professorId()));
+        User student = userRepository.findById(meetingBody.studentId()).orElseThrow(() ->
+                new EntityNotFoundException("User not found with id " + meetingBody.studentId()));
+        if (!professor.getRole().equals(UserRole.PROFESSOR)) {
+            throw new BadRequestException("User with id " + meetingBody.professorId() + " is not a professor");
         }
-        if (start.isPresent() && end.isPresent()) {
-            return meetingRepository.findByMeetingDateBetween(start.get(), end.get());
+        if (!student.getRole().equals(UserRole.ALUNO)) {
+            throw new BadRequestException("User with id " + meetingBody.studentId() + " is not a student");
         }
-        return meetingRepository.findAll();
+
+        LocalDateTime dateTime = LocalDateTime.parse(meetingBody.meetingDate());
+        Meeting meeting = new Meeting();
+        meeting.setMeetingDate(dateTime);
+        meeting.setSubject(meetingBody.subject());
+        meeting.setProfessor(professor);
+        meeting.setStudent(student);
+
+        meetingRepository.save(meeting);
     }
 
-    public List<Meeting> getAllMeetings() {
-        return meetingRepository.findAll();
+    public void deleteMeeting(Long id, User currentUser) throws BadRequestException {
+        Meeting meeting = meetingRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Meeting not found with id " + id));
+        if(!currentUser.getId().equals(meeting.getProfessor().getId())) {
+            throw new BadRequestException("User with id " + currentUser.getId() + " is not a professor");
+        }
+        meetingRepository.delete(meeting);
     }
 
-    public Optional<Meeting> getMeetingById(String id) {
-        return meetingRepository.findById(id);
-    }
+    public void updateMeeting(Long id, MultipartFile file, User currentUser) throws BadRequestException {
+        Meeting meeting = meetingRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Meeting not found with id " + id));
 
-    public Meeting saveMeeting(Meeting meeting) {
-        return meetingRepository.save(meeting);
-    }
+        if(!currentUser.getId().equals(meeting.getProfessor().getId())) {
+            throw new BadRequestException("User with id " + currentUser.getId() + " is not a professor");
+        }
 
-    public void deleteMeeting(String id) {
-        meetingRepository.deleteById(id);
-    }
+        String fileUrl;
 
-    public List<Meeting> getMeetingsByStudent(String studentId) {
-        return meetingRepository.findByStudentId(studentId);
-    }
+        if(!meeting.getDocumentName().isEmpty()){
+            try {
+                s3Service.deleteFile(meeting.getDocumentName());
+            } catch (Exception e) {
+                throw new BadRequestException("Failed to delete existing file: " + e.getMessage());
+            }
+        }
 
-    public List<Meeting> getMeetingsByAdvisor(String advisorId) {
-        return meetingRepository.findByAdvisorId(advisorId);
-    }
+        try {
+            fileUrl = s3Service.uploadFile(file);
+        }catch (Exception e) {
+            throw new BadRequestException("Failed to upload file: " + e.getMessage());
+        }
 
-    /** PATCH simples: só atualiza campos não nulos */
-    public Optional<Meeting> update(String id, Meeting patch) {
-        return meetingRepository.findById(id).map(existing -> {
-            if (patch.getMeetingDate() != null) existing.setMeetingDate(patch.getMeetingDate());
-            if (patch.getSubject() != null)      existing.setSubject(patch.getSubject());
-            if (patch.getDocumentURL() != null)  existing.setDocumentURL(patch.getDocumentURL());
-            if (patch.getStudentId() != null)    existing.setStudentId(patch.getStudentId());
-            if (patch.getAdvisorId() != null)    existing.setAdvisorId(patch.getAdvisorId());
-            return meetingRepository.save(existing);
-        });
+        meeting.setDocumentName(fileUrl);
+        meetingRepository.save(meeting);
     }
 }
