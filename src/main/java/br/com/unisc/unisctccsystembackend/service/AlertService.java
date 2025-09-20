@@ -21,23 +21,21 @@ public class AlertService {
         List<Alert> alerts;
 
         if (start != null && end != null) {
-            alerts = alertRepository.findByUserAndGeneratedAtBetween(user, start, end);
+            alerts = alertRepository.findByUserAndAlertDateBetweenOrderByAlertDateDesc(user, start, end);
         } else {
-            alerts = alertRepository.findByUser(user);
+            alerts = alertRepository.findByUserOrderByAlertDate(user);
         }
-
         return alerts.stream().map(this::toDTO).toList();
     }
-
-    private AlertResponseDTO toDTO(Alert alerta) {
+    private AlertResponseDTO toDTO(Alert alert) {
         return new AlertResponseDTO(
-                alerta.getId(),
-                alerta.getMessage(),
-                alerta.getGeneratedAt(),
-                alerta.getIsRead(),
-                alerta.getType(),
-                alerta.getUser().getId(),
-                alerta.getAlertDate()
+                alert.getId(),
+                alert.getMessage(),
+                alert.getGeneratedAt(),
+                alert.getIsRead(),
+                alert.getType(),
+                alert.getUser().getId(),
+                alert.getAlertDate()
         );
     }
 
@@ -62,5 +60,35 @@ public class AlertService {
         }
 
         alertRepository.delete(alert);
+    }
+
+    public void createOrUpdateAlert(User user, String message, LocalDateTime alertDate, AlertType type, Long alertId) {
+        Alert alert = new Alert();
+
+        if(alertId != null) {
+            alert = alertRepository.findById(alertId).orElse(new Alert());
+        }
+
+        alert.setUser(user);
+        alert.setMessage(message);
+        alert.setAlertDate(alertDate);
+        alert.setType(type);
+        alert.setGeneratedAt(LocalDateTime.now());
+        alert.setIsRead(false);
+
+        alertRepository.save(alert);
+    }
+
+    public List<AlertResponseDTO> getLimitedAlerts(User user) {
+        List<Alert> alerts = alertRepository.findTop3ByUserAndAlertDateBetweenAndIsReadOrderByAlertDate(user, LocalDateTime.now(), LocalDateTime.now().plusDays(7), false);
+        return alerts.stream().map(this::toDTO).toList();
+    }
+
+    public void markAllAlertsAsRead(User user) {
+        List<Alert> alerts = alertRepository.findByUserAndIsReadFalse(user);
+        for (Alert alert : alerts) {
+            alert.setIsRead(true);
+        }
+        alertRepository.saveAll(alerts);
     }
 }

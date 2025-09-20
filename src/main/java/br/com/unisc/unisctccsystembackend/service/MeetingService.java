@@ -1,5 +1,6 @@
 package br.com.unisc.unisctccsystembackend.service;
 
+import br.com.unisc.unisctccsystembackend.entities.AlertType;
 import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingBodyDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingResponse;
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
@@ -12,10 +13,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
 
 @Service
@@ -24,13 +22,15 @@ public class MeetingService {
     private final MeetingRepository meetingRepository;
     private final S3Service s3Service;
     private final UserRepository userRepository;
+    private final AlertService alertService;
 
     public MeetingService(MeetingRepository meetingRepository,
                           S3Service s3Service,
-                          UserRepository userRepository) {
+                          UserRepository userRepository, AlertService alertService) {
         this.meetingRepository = meetingRepository;
         this.s3Service = s3Service;
         this.userRepository = userRepository;
+        this.alertService = alertService;
     }
 
     public List<Meeting> list(String start,
@@ -83,6 +83,15 @@ public class MeetingService {
         meeting.setStudent(student);
         meeting.setLink(meetingBody.link());
 
+        alertService.createOrUpdateAlert(professor,
+                "Nova reunião agendada com " + student.getName() + " para falar sobre " + meeting.getSubject(),
+                dateTime.toLocalDateTime(),
+                AlertType.NOVA_REUNIAO, null);
+        alertService.createOrUpdateAlert(student,
+                "Nova reunião agendada com " + professor.getName() + " para falar sobre " + meeting.getSubject(),
+                dateTime.toLocalDateTime(),
+                AlertType.NOVA_REUNIAO, null);
+
         meetingRepository.save(meeting);
     }
 
@@ -93,6 +102,12 @@ public class MeetingService {
             throw new BadRequestException("User with id " + currentUser.getId() + " is not a professor");
         }
         meetingRepository.delete(meeting);
+        alertService.createOrUpdateAlert(meeting.getStudent(), "A reunião sobre " + meeting.getSubject() + " foi cancelada",
+                LocalDateTime.now(),
+                AlertType.REUNIAO_CANCELADA, null);
+        alertService.createOrUpdateAlert(meeting.getProfessor(), "A reunião sobre " + meeting.getSubject() + " foi cancelada",
+                LocalDateTime.now(),
+                AlertType.REUNIAO_CANCELADA, null);
     }
 
     public void updateMeeting(Long id, MultipartFile file, User currentUser) throws BadRequestException {
@@ -123,5 +138,19 @@ public class MeetingService {
 
         meeting.setDocumentName(fileUrl);
         meetingRepository.save(meeting);
+
+        alertService.createOrUpdateAlert(meeting.getStudent(),
+                "Há uma nova ata de reunião disponível para a reunião sobre " + meeting.getSubject(),
+                LocalDateTime.now(),
+                AlertType.NOVA_REUNIAO, null);
+    }
+
+    public Long countMeetings(User user) {
+        return meetingRepository.countByStudentId(user.getId());
+    }
+
+    public List<Meeting> getLimitedMeetings(User user) {
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("America/Sao_Paulo"));
+        return this.list(now.toString(), user).stream().limit(3).toList();
     }
 }

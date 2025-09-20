@@ -30,10 +30,23 @@ public class AlertController {
         return ResponseEntity.ok(alertService.getAlerts(user, start, end));
     }
 
+    @GetMapping("/limited")
+    public  ResponseEntity<List<AlertResponseDTO>> getLimitedAlerts(Authentication authentication){
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(alertService.getLimitedAlerts(user));
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<Void> markAlertAsRead(@PathVariable Long id, Authentication authentication) throws BadRequestException {
         User user = (User) authentication.getPrincipal();
         alertService.markAlertAsRead(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<Void> markAllAlertsAsRead(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        alertService.markAllAlertsAsRead(user);
         return ResponseEntity.noContent().build();
     }
 

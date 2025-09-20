@@ -23,6 +23,9 @@ public class EvaluationService {
     @Autowired
     private DeliverablesService deliverablesService;
 
+    @Autowired
+    private AlertService alertService;
+
     public List<EvaluationResponseDTO> getEvaluationsByDeliveryId(Long deliveryId) {
         List<Evaluation> evaluation = evaluationRepository.findAllByDelivery_Id(deliveryId)
                 .orElseThrow(() -> new EntityNotFoundException("Evaluation not found for this delivery"));
@@ -64,6 +67,13 @@ public class EvaluationService {
         evaluation.setEvaluationDate(LocalDateTime.now());
 
         evaluationRepository.save(evaluation);
+        alertService.createOrUpdateAlert(
+                evaluation.getDelivery().getTcc().getStudent(),
+                "Sua entrega foi avaliada pelo professor " + professor.getName() + ". Verifique os detalhes da avaliação no sistema.",
+                LocalDateTime.now(),
+                AlertType.AVALIACAO_DISPONIVEL,
+                null
+        );
         return toDTO(evaluation);
     }
 
@@ -98,6 +108,13 @@ public class EvaluationService {
         evaluation.setEvaluationDate(LocalDateTime.now());
 
         evaluationRepository.save(evaluation);
+        alertService.createOrUpdateAlert(
+                evaluation.getDelivery().getTcc().getStudent(),
+                "Seu professor " + professor.getName() + " atualizou a avaliação. Verifique os detalhes da avaliação no sistema.",
+                LocalDateTime.now(),
+                AlertType.AVALIACAO_DISPONIVEL,
+                null
+        );
         return toDTO(evaluation);
     }
 

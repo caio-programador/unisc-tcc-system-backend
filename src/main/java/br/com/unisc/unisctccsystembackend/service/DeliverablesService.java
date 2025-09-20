@@ -1,12 +1,10 @@
 package br.com.unisc.unisctccsystembackend.service;
 
+import br.com.unisc.unisctccsystembackend.entities.*;
 import br.com.unisc.unisctccsystembackend.entities.DTO.DeliveryCreateDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.DeliveryResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.Deliverables;
-import br.com.unisc.unisctccsystembackend.entities.DeliveryStatus;
-import br.com.unisc.unisctccsystembackend.entities.TCCRelationships;
 import br.com.unisc.unisctccsystembackend.repositories.DeliverablesRepository;
 import br.com.unisc.unisctccsystembackend.repositories.TCCRelationshipsRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -27,6 +26,8 @@ public class DeliverablesService {
     private TCCRelationshipsRepository tccRelationshipsRepository;
     @Autowired
     private S3Service s3Service;
+    @Autowired
+    private AlertService alertService;
 
     public List<DeliveryResponseDTO> getAllDeliverablesByStudentId(Long studentId) {
         List<Deliverables> deliverables = deliverablesRepository.findAllByTcc_StudentId_OrderByDeliveryDateDesc(studentId);
@@ -59,6 +60,15 @@ public class DeliverablesService {
         deliverable.setQuantityEvaluations(0);
         deliverable.setAverageScore(0.0);
         deliverable.setTotalScore(0.0);
+        User[] professors = {tcc.getDefensePanel().getProfessor1(), tcc.getDefensePanel().getProfessor2(), tcc.getDefensePanel().getProfessor3()};
+        Arrays.stream(professors).forEach(professor -> {
+            alertService.createOrUpdateAlert(professor,
+                    "O(A) aluno(a) "+ tcc.getStudent() + "realizou a entrega de seu trabalho, está disponível para avaliação.",
+                    LocalDateTime.now(), AlertType.NOVA_ENTREGA, null);
+        });
+
+        alertService.createOrUpdateAlert(tcc.getStudent(), "Você realizou a entrega do seu trabalho, aguarde a avaliação dos professores.",
+                LocalDateTime.now(), AlertType.NOVA_ENTREGA, null);
 
         deliverablesRepository.save(deliverable);
     }

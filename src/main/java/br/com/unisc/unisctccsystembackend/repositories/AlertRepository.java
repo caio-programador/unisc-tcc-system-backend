@@ -8,7 +8,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AlertRepository extends JpaRepository<Alert, Long> {
-    List<Alert> findByUserAndGeneratedAtBetween(User user, LocalDateTime start, LocalDateTime end);
-    List<Alert> findByUser(User user);
+    List<Alert> findByUserAndAlertDateBetweenOrderByAlertDateDesc(User user, LocalDateTime start, LocalDateTime end);
+    List<Alert> findByUserOrderByAlertDate(User user);
+    List<Alert> findTop3ByUserAndAlertDateBetweenAndIsReadOrderByAlertDate(User user, LocalDateTime start, LocalDateTime end, boolean isRead);
+
+    List<Alert> findByUserAndIsReadFalse(User user);
 }
 

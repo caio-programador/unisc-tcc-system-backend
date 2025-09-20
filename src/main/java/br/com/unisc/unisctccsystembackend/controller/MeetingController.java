@@ -1,5 +1,6 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
+import br.com.unisc.unisctccsystembackend.entities.DTO.CountMeetingsResponseDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingBodyDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingResponse;
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
@@ -81,5 +82,22 @@ public class MeetingController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(document);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<CountMeetingsResponseDTO> getCountMeetings(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        Long count = service.countMeetings(user);
+        CountMeetingsResponseDTO responseDTO = new CountMeetingsResponseDTO(count);
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @GetMapping("/limited")
+    public ResponseEntity<List<MeetingResponse>> getLimitedMeetings(
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        List<Meeting> meetings = service.getLimitedMeetings(user);
+        List<MeetingResponse> responseList = meetings.stream().map(MeetingResponse::from).toList();
+        return ResponseEntity.ok(responseList);
     }
 }
