@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "meetings")
@@ -18,13 +19,15 @@ public class Meeting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private LocalDateTime meetingDate;
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime meetingDate;
 
     @Column(nullable = false, length = 2000)
     private String subject;
 
     private String documentName;
+
+    private String link;
 
     @ManyToOne
     @JoinColumn(name = "professor_id", nullable = false)

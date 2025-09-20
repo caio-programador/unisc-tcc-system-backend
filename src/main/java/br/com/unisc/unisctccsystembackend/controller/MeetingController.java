@@ -5,6 +5,7 @@ import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingResponse;
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.service.MeetingService;
+import br.com.unisc.unisctccsystembackend.service.S3Service;
 import org.apache.coyote.BadRequestException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -22,18 +23,20 @@ import java.util.Optional;
 public class MeetingController {
 
     private final MeetingService service;
+    private final S3Service s3Service;
 
-    public MeetingController(MeetingService service) {
+    public MeetingController(MeetingService service, S3Service s3Service) {
         this.service = service;
+        this.s3Service = s3Service;
     }
 
     @GetMapping
     public ResponseEntity<List<MeetingResponse>> list(
-           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> start,
+           @RequestParam(name = "startDate", required = false, defaultValue = "") String startDate,
             Authentication authentication) {
         User user = (User) authentication.getPrincipal();
 
-        List<Meeting> result = service.list(start, user);
+        List<Meeting> result = service.list(startDate, user);
         List<MeetingResponse> responseList = result.stream().map(MeetingResponse::from).toList();
         return result.isEmpty()
                 ? ResponseEntity.noContent().build()
@@ -70,5 +73,13 @@ public class MeetingController {
         User user = (User) authentication.getPrincipal();
         service.deleteMeeting(id, user);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/download/{documentName}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String documentName) throws Exception {
+        byte[] document = s3Service.downloadFile(documentName);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(document);
     }
 }

@@ -12,9 +12,11 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MeetingService {
@@ -31,21 +33,25 @@ public class MeetingService {
         this.userRepository = userRepository;
     }
 
-    public List<Meeting> list(Optional<LocalDateTime> start,
+    public List<Meeting> list(String start,
                               User currentUser) {
         if (currentUser.getRole().equals(UserRole.PROFESSOR)) {
-            if (start.isPresent()) {
-                return meetingRepository.findByProfessorIdAndMeetingDateAfter(currentUser.getId(),
-                        start.get());
+            if (!start.isEmpty()) {
+                Instant instant = Instant.parse(start);
+                OffsetDateTime dateTime = instant.atZone(ZoneOffset.UTC).toOffsetDateTime();
+                return meetingRepository.findAllByProfessor_IdAndMeetingDateAfter(currentUser.getId(),
+                        dateTime);
             } else {
-                return meetingRepository.findByProfessorId(currentUser.getId());
+                return meetingRepository.findAllByProfessor_Id(currentUser.getId());
             }
         } else {
-            if (start.isPresent()) {
-                return meetingRepository.findByStudentIdAndMeetingDateAfter(currentUser.getId(),
-                        start.get());
+            if (!start.isEmpty()) {
+                Instant instant = Instant.parse(start);
+                OffsetDateTime dateTime = instant.atZone(ZoneId.of("America/Sao_Paulo")).toOffsetDateTime();
+                return meetingRepository.findAllByStudent_IdAndMeetingDateAfter(currentUser.getId(),
+                        dateTime);
             } else {
-                return meetingRepository.findByStudentId(currentUser.getId());
+                return meetingRepository.findAllByStudent_Id(currentUser.getId());
             }
         }
 
@@ -68,12 +74,14 @@ public class MeetingService {
             throw new BadRequestException("User with id " + meetingBody.studentId() + " is not a student");
         }
 
-        LocalDateTime dateTime = LocalDateTime.parse(meetingBody.meetingDate());
+        Instant instant = Instant.parse(meetingBody.meetingDate());
+        OffsetDateTime dateTime = instant.atZone(ZoneId.of("America/Sao_Paulo")).toOffsetDateTime();
         Meeting meeting = new Meeting();
         meeting.setMeetingDate(dateTime);
         meeting.setSubject(meetingBody.subject());
         meeting.setProfessor(professor);
         meeting.setStudent(student);
+        meeting.setLink(meetingBody.link());
 
         meetingRepository.save(meeting);
     }
@@ -97,11 +105,13 @@ public class MeetingService {
 
         String fileUrl;
 
-        if(!meeting.getDocumentName().isEmpty()){
-            try {
-                s3Service.deleteFile(meeting.getDocumentName());
-            } catch (Exception e) {
-                throw new BadRequestException("Failed to delete existing file: " + e.getMessage());
+        if(meeting.getDocumentName() != null){
+            if(!meeting.getDocumentName().isEmpty()) {
+                try {
+                    s3Service.deleteFile(meeting.getDocumentName());
+                } catch (Exception e) {
+                    throw new BadRequestException("Failed to delete existing file: " + e.getMessage());
+                }
             }
         }
 

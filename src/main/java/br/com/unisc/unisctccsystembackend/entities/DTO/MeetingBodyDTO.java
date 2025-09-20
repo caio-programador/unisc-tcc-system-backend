@@ -4,6 +4,7 @@ public record MeetingBodyDTO (
         String meetingDate,
         String subject,
         Long professorId,
-        Long studentId
+        Long studentId,
+        String link
 ) {
 }
