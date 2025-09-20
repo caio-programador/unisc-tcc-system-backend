@@ -14,5 +14,5 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     List<Meeting> findAllByStudent_Id(Long studentId);
     List<Meeting> findAllByProfessor_Id(Long professorId);
 
-    Long countByStudentIdAndMeetingDateAfter(Long studentId, OffsetDateTime meetingDate);
+    Long countByStudentIdAndMeetingDateBefore(Long studentId, OffsetDateTime meetingDate);
 }

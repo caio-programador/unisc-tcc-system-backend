@@ -147,7 +147,7 @@ public class MeetingService {
 
     public Long countMeetings(User user) {
         OffsetDateTime now = OffsetDateTime.now(ZoneId.of("America/Sao_Paulo"));
-        return meetingRepository.countByStudentIdAndMeetingDateAfter(user.getId(), now);
+        return meetingRepository.countByStudentIdAndMeetingDateBefore(user.getId(), now);
     }
 
     public List<Meeting> getLimitedMeetings(User user) {
