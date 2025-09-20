@@ -1,13 +1,19 @@
 package br.com.unisc.unisctccsystembackend.controller;
 
+import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingBodyDTO;
+import br.com.unisc.unisctccsystembackend.entities.DTO.MeetingResponse;
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
+import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.service.MeetingService;
+import br.com.unisc.unisctccsystembackend.service.S3Service;
+import org.apache.coyote.BadRequestException;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,62 +23,63 @@ import java.util.Optional;
 public class MeetingController {
 
     private final MeetingService service;
+    private final S3Service s3Service;
 
-    public MeetingController(MeetingService service) {
+    public MeetingController(MeetingService service, S3Service s3Service) {
         this.service = service;
+        this.s3Service = s3Service;
     }
 
-    // GET /meetings?studentId=&advisorId=&start=&end=
     @GetMapping
-    public ResponseEntity<List<Meeting>> list(
-            @RequestParam Optional<String> studentId,
-            @RequestParam Optional<String> advisorId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<LocalDateTime> end) {
+    public ResponseEntity<List<MeetingResponse>> list(
+           @RequestParam(name = "startDate", required = false, defaultValue = "") String startDate,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
 
-        List<Meeting> result = service.list(studentId, advisorId, start, end);
+        List<Meeting> result = service.list(startDate, user);
+        List<MeetingResponse> responseList = result.stream().map(MeetingResponse::from).toList();
         return result.isEmpty()
                 ? ResponseEntity.noContent().build()
-                : ResponseEntity.ok(result);
+                : ResponseEntity.ok(responseList);
     }
 
-    // GET /meetings/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Meeting> getById(@PathVariable String id) {
-        return service.getMeetingById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<MeetingResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getMeetingById(id));
     }
 
-    // POST /meetings
     @PostMapping
-    public ResponseEntity<Meeting> create(@RequestBody Meeting meeting) {
-        Meeting saved = service.saveMeeting(meeting);
+    public ResponseEntity<Void> create(
+            @RequestBody MeetingBodyDTO body
+            ) throws BadRequestException {
+        service.saveMeeting(body);
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(saved.getId())
-                .toUri();
-
-        return ResponseEntity.created(location).body(saved);
-    }
-
-    // PATCH /meetings/{id}
-    @PatchMapping("/{id}")
-    public ResponseEntity<Meeting> update(@PathVariable String id, @RequestBody Meeting patch) {
-        return service.update(id, patch)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // DELETE /meetings/{id}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        if (service.getMeetingById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        service.deleteMeeting(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping(path = "/{id}/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateDocument(
+            @PathVariable Long id,
+            @RequestParam(name = "file") MultipartFile file,
+            Authentication authentication
+            ) throws BadRequestException {
+        User user = (User) authentication.getPrincipal();
+        service.updateMeeting(id, file, user);
+        return ResponseEntity.noContent().build();
+    };
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) throws BadRequestException{
+        User user = (User) authentication.getPrincipal();
+        service.deleteMeeting(id, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/download/{documentName}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable String documentName) throws Exception {
+        byte[] document = s3Service.downloadFile(documentName);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(document);
     }
 }

@@ -78,7 +78,7 @@ public class DeliverableController {
     public ResponseEntity<byte[]> downloadFile(@PathVariable String key) throws Exception {
         byte[] fileData = deliverablesService.downloadFile(key);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + key + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(fileData);
     }
 }

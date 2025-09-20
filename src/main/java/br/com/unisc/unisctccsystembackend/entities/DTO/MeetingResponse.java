@@ -1,24 +1,26 @@
 package br.com.unisc.unisctccsystembackend.entities.DTO;
 
 import br.com.unisc.unisctccsystembackend.entities.Meeting;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class MeetingResponse {
-    public String id;
-    public LocalDateTime meetingDate;
+    public Long id;
+    public OffsetDateTime meetingDate;
     public String subject;
-    public String documentURL;
-    public String studentId;
-    public String advisorId;
+    public String documentName;
+    public String studentName;
+    public String professorName;
+    public String link;
 
     public static MeetingResponse from(Meeting m) {
         MeetingResponse r = new MeetingResponse();
         r.id = m.getId();
         r.meetingDate = m.getMeetingDate();
         r.subject = m.getSubject();
-        r.documentURL = m.getDocumentURL();
-        r.studentId = m.getStudentId();
-        r.advisorId = m.getAdvisorId();
+        r.documentName = m.getDocumentName();
+        r.studentName = m.getStudent().getName();
+        r.professorName = m.getProfessor().getName();
+        r.link = m.getLink();
         return r;
     }
 }

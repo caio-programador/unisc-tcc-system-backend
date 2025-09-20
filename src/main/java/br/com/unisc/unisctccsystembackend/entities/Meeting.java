@@ -2,52 +2,38 @@ package br.com.unisc.unisctccsystembackend.entities;
 
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "meetings")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class Meeting {
 
     @Id
-    @Column(length = 36)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false)
-    private LocalDateTime meetingDate;
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime meetingDate;
 
     @Column(nullable = false, length = 2000)
     private String subject;
 
-    @Column(length = 1000)
-    private String documentURL;
+    private String documentName;
 
-    @Column(nullable = false, length = 36)
-    private String studentId;
+    private String link;
 
-    @Column(nullable = false, length = 36)
-    private String advisorId;
+    @ManyToOne
+    @JoinColumn(name = "professor_id", nullable = false)
+    private User professor;
 
-    protected Meeting() {} // <— JPA precisa do no-args
-
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null || this.id.isBlank()) {
-            this.id = UUID.randomUUID().toString();
-        }
-    }
-
-    // getters/setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public LocalDateTime getMeetingDate() { return meetingDate; }
-    public void setMeetingDate(LocalDateTime meetingDate) { this.meetingDate = meetingDate; }
-    public String getSubject() { return subject; }
-    public void setSubject(String subject) { this.subject = subject; }
-    public String getDocumentURL() { return documentURL; }
-    public void setDocumentURL(String documentURL) { this.documentURL = documentURL; }
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
-    public String getAdvisorId() { return advisorId; }
-    public void setAdvisorId(String advisorId) { this.advisorId = advisorId; }
+    @ManyToOne
+    @JoinColumn(name = "student_id", nullable = false)
+    private User student;
 }
