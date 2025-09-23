@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -27,6 +28,9 @@ public class TCCRelationshipsService {
 
     @Autowired
     private DefensePanelRepository defensePanelRepository;
+
+    @Autowired
+    private AlertService alertService;
 
     public Page<TCCRelationshipsResponseDTO> getAllTCCs(String name, int page, int size, User currentUser) {
         Pageable pageable = PageRequest.of(page, size);
@@ -97,6 +101,25 @@ public class TCCRelationshipsService {
                 throw new BadRequestException("The professorId provider is not Professor");
             }
             tccEntity.setProfessor(professor);
+            tccEntity.getDefensePanel().setProfessor1(professor);
+            if(!tcc.professorId().equals(tccEntity.getProfessor().getId())) {
+                alertService.createOrUpdateAlert(
+                        professor,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes da Proposta e prepare-se para a avaliação",
+                        tccEntity.getProposalAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+                alertService.createOrUpdateAlert(
+                        professor,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes do TCC e prepare-se para a avaliação",
+                        tccEntity.getTccAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+            }
         }
         if(tcc.professor2Id() != null) {
             verifyProfessors(tccEntity.getProfessor().getId(), tcc.professor2Id(),
@@ -106,6 +129,24 @@ public class TCCRelationshipsService {
                 throw new BadRequestException("The professor2Id provider is not Professor");
             }
             tccEntity.getDefensePanel().setProfessor2(professor2);
+            if(!tcc.professor2Id().equals(tccEntity.getDefensePanel().getProfessor2().getId())) {
+                alertService.createOrUpdateAlert(
+                        professor2,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes da Proposta e prepare-se para a avaliação",
+                        tccEntity.getProposalAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+                alertService.createOrUpdateAlert(
+                        professor2,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes do TCC e prepare-se para a avaliação",
+                        tccEntity.getTccAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+            }
         }
 
         if(tcc.professor3Id() != null) {
@@ -116,6 +157,24 @@ public class TCCRelationshipsService {
                 throw new BadRequestException("The professor3Id provider is not Professor");
             }
             tccEntity.getDefensePanel().setProfessor3(professor3);
+            if(!tcc.professor3Id().equals(tccEntity.getDefensePanel().getProfessor3().getId())) {
+                alertService.createOrUpdateAlert(
+                        professor3,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes da Proposta e prepare-se para a avaliação",
+                        tccEntity.getProposalAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+                alertService.createOrUpdateAlert(
+                        professor3,
+                        "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                                +tccEntity.getStudent().getName()+". Por favor, verifique os detalhes do TCC e prepare-se para a avaliação",
+                        tccEntity.getTccAssessmentDate(),
+                        AlertType.ATRASO_AVALIACAO,
+                        null
+                );
+            }
         }
 
         if(tcc.tccTitle() != null && !tcc.tccTitle().isEmpty()) {
@@ -125,11 +184,27 @@ public class TCCRelationshipsService {
             LocalDateTime tccDeliveryDate = LocalDateTime.parse(tcc.tccDeliveryDate().split("\\.")[0]);
             tccEntity.setTccDeliveryDate(tccDeliveryDate);
             tccEntity.setTccAssessmentDate(tccDeliveryDate.plusDays(7));
+
+            alertService.createOrUpdateAlert(
+                    tccEntity.getStudent(),
+                    "A data de entrega de seu TCC mudou.Você deve entregar o TCC até a data limite",
+                    tccDeliveryDate,
+                    AlertType.ATRASO_ENTREGA,
+                    null
+            );
+
         }
         if(tcc.proposalDeliveryDate() != null && !tcc.proposalDeliveryDate().isEmpty()) {
             LocalDateTime proposalDeliveryDate = LocalDateTime.parse(tcc.proposalDeliveryDate().split("\\.")[0]);
             tccEntity.setProposalDeliveryDate(proposalDeliveryDate);
             tccEntity.setProposalAssessmentDate(proposalDeliveryDate.plusDays(7));
+            alertService.createOrUpdateAlert(
+                    tccEntity.getStudent(),
+                    "A data de entrega de sua Proposta de TCC mudou.Você deve entregar a Proposta de TCC até a data limite",
+                    proposalDeliveryDate,
+                    AlertType.ATRASO_ENTREGA,
+                    null
+            );
         }
 
         if(tcc.admissibility() != null && !tcc.admissibility().isEmpty()) {
@@ -158,11 +233,47 @@ public class TCCRelationshipsService {
         tccRelationships.setProposalAssessmentDate(proposalAssessmentDate);
         tccRelationships.setTccAssessmentDate(tccAssessmentDate);
         tccRelationships.setStudent(student);
+        alertService.createOrUpdateAlert(
+                student,
+                "Você deve entregar a Proposta de TCC até a data limite",
+                proposalDeliveryDate,
+                AlertType.ATRASO_ENTREGA,
+                null
+        );
+
+        alertService.createOrUpdateAlert(
+                student,
+                "Você deve entregar o TCC até a data limite",
+                tccDeliveryDate,
+                AlertType.ATRASO_ENTREGA,
+                null
+                );
         tccRelationships.setProfessor(professor);
         DefensePanel defensePanel = new DefensePanel();
         defensePanel.setProfessor1(professor);
         defensePanel.setProfessor2(professor2);
         defensePanel.setProfessor3(professor3);
+        User[] professors = {professor, professor2, professor3};
+        Arrays.stream(professors).forEach(singleProfessor -> {
+            alertService.createOrUpdateAlert(
+                    singleProfessor,
+                    "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                            +student.getName()+". Por favor, verifique os detalhes da Proposta e prepare-se para a avaliação",
+                    proposalAssessmentDate,
+                    AlertType.ATRASO_AVALIACAO,
+                    null
+            );
+            alertService.createOrUpdateAlert(
+                    singleProfessor,
+                    "Você foi designado como membro da Banca Examinadora do TCC do(a) aluno(a) "
+                            +student.getName()+". Por favor, verifique os detalhes do TCC e prepare-se para a avaliação",
+                    tccAssessmentDate,
+                    AlertType.ATRASO_AVALIACAO,
+                    null
+            );
+        });
+
+
         defensePanel = defensePanelRepository.save(defensePanel);
         tccRelationships.setDefensePanel(defensePanel);
         tccRelationships.setAdmissibility(Admissibility.PENDING);
@@ -217,5 +328,11 @@ public class TCCRelationshipsService {
         TCCRelationships tcc = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
         tcc.setAdmissibility(admissibility);
         repository.save(tcc);
+
+        alertService.createOrUpdateAlert(tcc.getStudent(),
+                "A admissibilidade do seu TCC foi atualizada para: " + admissibility.name(),
+                LocalDateTime.now(),
+                AlertType.NOVO_PARECER,
+                null);
     }
 }

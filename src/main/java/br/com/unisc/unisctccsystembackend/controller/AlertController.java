@@ -3,6 +3,7 @@ package br.com.unisc.unisctccsystembackend.controller;
 import br.com.unisc.unisctccsystembackend.entities.User;
 import br.com.unisc.unisctccsystembackend.entities.DTO.AlertResponseDTO;
 import br.com.unisc.unisctccsystembackend.service.AlertService;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ import java.util.List;
 public class AlertController {
 
     @Autowired
-    private AlertService alertaService;
+    private AlertService alertService;
 
     @GetMapping
     public ResponseEntity<List<AlertResponseDTO>> getAlerts(
@@ -26,6 +27,33 @@ public class AlertController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
         User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(alertaService.getAlerts(user, start, end));
+        return ResponseEntity.ok(alertService.getAlerts(user, start, end));
+    }
+
+    @GetMapping("/limited")
+    public  ResponseEntity<List<AlertResponseDTO>> getLimitedAlerts(Authentication authentication){
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(alertService.getLimitedAlerts(user));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> markAlertAsRead(@PathVariable Long id, Authentication authentication) throws BadRequestException {
+        User user = (User) authentication.getPrincipal();
+        alertService.markAlertAsRead(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<Void> markAllAlertsAsRead(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        alertService.markAllAlertsAsRead(user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAlert(@PathVariable Long id, Authentication authentication) throws BadRequestException {
+        User user = (User) authentication.getPrincipal();
+        alertService.deleteAlert(user, id);
+        return ResponseEntity.noContent().build();
     }
 }

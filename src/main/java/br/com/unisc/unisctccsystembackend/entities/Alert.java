@@ -14,22 +14,26 @@ import java.time.LocalDateTime;
 public class Alert {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "message", nullable = false, length = 500)
-    private String mensagem;
+    private String message;
 
     @Column(name = "generated_at", nullable = false)
-    private LocalDateTime dataGeracao;
+    private LocalDateTime generatedAt;
 
     @Column(name = "is_read")
-    private Boolean isLido = false;
+    private Boolean isRead = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
-    private AlertType tipoAlerta;
+    private AlertType type;
+
+    @Column(name = "alert_date", nullable = false)
+    private LocalDateTime alertDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User destinatario;
+    private User user;
 }
