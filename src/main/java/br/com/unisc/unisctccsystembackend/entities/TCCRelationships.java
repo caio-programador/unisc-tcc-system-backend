@@ -23,18 +23,18 @@ public class TCCRelationships {
     private LocalDateTime proposalAssessmentDate;
     private LocalDateTime tccAssessmentDate;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne()
     @JoinColumn(name = "student_id", unique = true)
     private User student;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "professor_id")
     private User professor;
 
-    @OneToMany(mappedBy = "tcc")
+    @OneToMany(mappedBy = "tcc", cascade =  CascadeType.ALL)
     private List<Deliverables> deliverables;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "defense_panel_id")
     private DefensePanel defensePanel;
 

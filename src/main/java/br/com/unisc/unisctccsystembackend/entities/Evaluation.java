@@ -24,7 +24,7 @@ public class Evaluation {
 
     @ManyToOne
     @JoinColumn(name = "professor_id", nullable = false)
-    private User professor; // avaliador (orientador ou banca futuramente)
+    private User professor;
 
     private Double introduction;
     private Double goals;

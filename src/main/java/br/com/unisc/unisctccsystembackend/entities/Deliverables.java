@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity(name = "deliverables")
 @Table(name = "deliverables")
@@ -38,6 +39,9 @@ public class Deliverables {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "delivery", cascade =  CascadeType.ALL)
+    private List<Evaluation> evaluations;
 
     @PrePersist
     protected void onCreate() {

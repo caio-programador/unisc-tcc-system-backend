@@ -63,7 +63,7 @@ public class DeliverablesService {
         User[] professors = {tcc.getDefensePanel().getProfessor1(), tcc.getDefensePanel().getProfessor2(), tcc.getDefensePanel().getProfessor3()};
         Arrays.stream(professors).forEach(professor -> {
             alertService.createOrUpdateAlert(professor,
-                    "O(A) aluno(a) "+ tcc.getStudent() + "realizou a entrega de seu trabalho, está disponível para avaliação.",
+                    "O(A) aluno(a) "+ tcc.getStudent().getName() + "realizou a entrega de seu trabalho, está disponível para avaliação.",
                     LocalDateTime.now(), AlertType.NOVA_ENTREGA, null);
         });
 

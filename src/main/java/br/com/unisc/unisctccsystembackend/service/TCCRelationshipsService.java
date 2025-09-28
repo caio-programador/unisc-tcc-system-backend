@@ -218,7 +218,7 @@ public class TCCRelationshipsService {
 
     public void deleteOneTCCById(Long tccId) {
         TCCRelationships tccEntity = repository.findById(tccId).orElseThrow(() -> new EntityNotFoundException("TCC not found"));
-        repository.delete(tccEntity);
+        repository.deleteByIdDirectly(tccEntity.getId());
     }
 
     private TCCRelationships getTccRelationships(TCCRelationshipsCreateDTO tcc, User student, User professor,
