@@ -3,8 +3,6 @@ package br.com.unisc.unisctccsystembackend.service;
 import br.com.unisc.unisctccsystembackend.entities.*;
 import br.com.unisc.unisctccsystembackend.entities.DTO.DeliveryCreateDTO;
 import br.com.unisc.unisctccsystembackend.entities.DTO.DeliveryResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.TCCRelationshipsResponseDTO;
-import br.com.unisc.unisctccsystembackend.entities.DTO.UserResponseDTO;
 import br.com.unisc.unisctccsystembackend.repositories.DeliverablesRepository;
 import br.com.unisc.unisctccsystembackend.repositories.TCCRelationshipsRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,13 +28,13 @@ public class DeliverablesService {
     private AlertService alertService;
 
     public List<DeliveryResponseDTO> getAllDeliverablesByStudentId(Long studentId) {
-        List<Deliverables> deliverables = deliverablesRepository.findAllByTcc_StudentId_OrderByDeliveryDateDesc(studentId);
+        List<Deliverables> deliverables = deliverablesRepository.findAllByTcc_StudentId_OrderByIdDesc(studentId);
 
         return deliverables.stream().map(this::mapToDTO).toList();
     }
 
     public List<DeliveryResponseDTO> getAllDeliverablesByTccId(Long tccId) {
-        List<Deliverables> deliverables = deliverablesRepository.findAllByTcc_Id_OrderByDeliveryDateDesc(tccId);
+        List<Deliverables> deliverables = deliverablesRepository.findAllByTcc_Id_OrderByIdDesc(tccId);
         return deliverables.stream().map(this::mapToDTO).toList();
     }
 
@@ -63,7 +61,7 @@ public class DeliverablesService {
         User[] professors = {tcc.getDefensePanel().getProfessor1(), tcc.getDefensePanel().getProfessor2(), tcc.getDefensePanel().getProfessor3()};
         Arrays.stream(professors).forEach(professor -> {
             alertService.createOrUpdateAlert(professor,
-                    "O(A) aluno(a) "+ tcc.getStudent().getName() + "realizou a entrega de seu trabalho, está disponível para avaliação.",
+                    "O(A) aluno(a) "+ tcc.getStudent().getName() + " realizou a entrega de seu trabalho, está disponível para avaliação.",
                     LocalDateTime.now(), AlertType.NOVA_ENTREGA, null);
         });
 

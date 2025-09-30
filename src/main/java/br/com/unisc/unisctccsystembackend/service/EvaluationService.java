@@ -46,7 +46,8 @@ public class EvaluationService {
 
         if(delivery.getQuantityEvaluations() == 3){
             if (delivery.getAverageScore() < 7)
-                if (delivery.getDeliveryType().equals(DeliveryType.REELABORACAO_PROPOSTA))
+                if (delivery.getDeliveryType().equals(DeliveryType.REELABORACAO_PROPOSTA) || 
+                delivery.getDeliveryType().equals(DeliveryType.REELABORACAO_TC))
                     deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REELABORACAO_REPROVADA);
                 else
                     deliverablesService.updateDeliverableStatus(delivery.getId(), DeliveryStatus.REPROVADO);
@@ -89,8 +90,9 @@ public class EvaluationService {
         if (dto.methodology() != null) evaluation.setMethodology(dto.methodology());
 
         double thisEvaluationTotal = evaluation.getIntroduction() + evaluation.getGoals() + evaluation.getBibliographyRevision() + evaluation.getMethodology();
+
+        evaluation.getDelivery().setTotalScore(evaluation.getDelivery().getTotalScore() - evaluation.getTotal() + thisEvaluationTotal);
         evaluation.setTotal(thisEvaluationTotal);
-        evaluation.getDelivery().setTotalScore(evaluation.getDelivery().getTotalScore() + thisEvaluationTotal);
         evaluation.getDelivery().setAverageScore(evaluation.getDelivery().getTotalScore() / 3);
 
         if(evaluation.getDelivery().getQuantityEvaluations() == 3){
